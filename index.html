@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laptop Reservering ISK Almelo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Nunito+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg:            #e8f2fb;
+    --surface:       #ffffff;
+    --surface2:      #f0f7ff;
+    --border:        #c2d9ef;
+    --text:          #1a2a3a;
+    --text-muted:    #5a7a9a;
+    --accent:        #1565c0;
+    --accent2:       #1976d2;
+    --accent-light:  #dceefb;
+    --accent-xlight: #eef6fd;
+    --priority:      #7b1fa2;
+    --priority-light:#f3e5f5;
+    --warn:          #e65100;
+    --warn-light:    #fff3e0;
+    --danger:        #b71c1c;
+    --danger-light:  #ffebee;
+    --ok:            #1b5e20;
+    --ok-light:      #e8f5e9;
+    --shadow:        0 1px 4px rgba(21,101,192,0.08), 0 4px 16px rgba(21,101,192,0.06);
+    --shadow-lg:     0 8px 40px rgba(21,101,192,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── LOGIN ── */
+  #loginScreen {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+  }
+
+  .login-box {
+    background: white;
+    border-radius: 20px;
+    padding: 44px 40px;
+    width: 100%; max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    text-align: center;
+  }
+
+  .login-logo { font-size: 2.4rem; margin-bottom: 8px; }
+
+  .login-box h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .login-box p {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }
+
+  .login-box input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    text-align: center;
+    letter-spacing: 0.1em;
+    transition: border-color 0.15s;
+  }
+
+  .login-box input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+
+  .login-box input.shake {
+    border-color: var(--danger);
+    animation: shake 0.35s ease;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+
+  .login-err {
+    font-size: 0.78rem;
+    color: var(--danger);
+    margin-bottom: 12px;
+    min-height: 18px;
+  }
+
+  .login-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .login-btn:hover { background: #0d47a1; }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(90deg, #0d47a1 0%, #1976d2 100%);
+    color: white;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    box-shadow: 0 2px 12px rgba(13,71,161,0.35);
+  }
+
+  header h1 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  header .subtitle {
+    font-size: 0.76rem;
+    opacity: 0.72;
+    margin-top: 1px;
+  }
+
+  /* ── MAAND/WEEK NAV ── */
+  .month-nav {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    padding: 10px 28px;
+    overflow-x: auto;
+  }
+
+  .month-nav::-webkit-scrollbar { height: 4px; }
+  .month-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .month-row {
+    display: flex;
+    gap: 6px;
+    min-width: max-content;
+    align-items: flex-start;
+  }
+
+  .month-group { display: flex; flex-direction: column; gap: 4px; }
+
+  .month-label {
+    font-size: 0.67rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    padding: 0 6px;
+    white-space: nowrap;
+  }
+
+  .week-pills { display: flex; gap: 3px; }
+
+  .week-pill {
+    padding: 4px 9px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    transition: all 0.12s;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  .week-pill:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-xlight); }
+
+  .week-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-weight: 700;
+  }
+
+  .week-pill.has-today {
+    border-color: var(--accent2);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .week-pill.has-today.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* ── KAR BAR ── */
+  .kar-bar {
+    background: var(--surface2);
+    border-bottom: 2px solid var(--border);
+    padding: 10px 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .kar-bar-label {
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .kar-buttons { display: flex; gap: 7px; flex-wrap: wrap; }
+
+  .kar-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.13s;
+    gap: 1px;
+    min-width: 110px;
+  }
+
+  .kar-btn:hover { border-color: var(--accent2); background: var(--accent-xlight); }
+
+  .kar-btn.active { border-color: var(--accent); background: var(--accent); color: white; }
+
+  .kar-btn .kar-name { font-size: 0.8rem; font-weight: 800; }
+  .kar-btn .kar-avail { font-size: 0.68rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; opacity: 0.78; }
+  .kar-btn.active .kar-avail { opacity: 0.9; }
+
+  /* ── CONTAINER ── */
+  .container { padding: 16px 28px; max-width: 1400px; margin: 0 auto; }
+
+  .legend {
+    display: flex; gap: 14px; margin-bottom: 12px;
+    flex-wrap: wrap; align-items: center;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.74rem; color: var(--text-muted); }
+  .legend-dot { width: 9px; height: 9px; border-radius: 2px; }
+  .dot-priority { background: var(--priority); }
+  .dot-normal   { background: var(--accent); }
+  .dot-warn     { background: var(--warn); }
+  .dot-danger   { background: var(--danger); }
+
+  /* ── DAG SAMENVATTING ── */
+  .day-summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin-bottom: 14px; }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    box-shadow: var(--shadow);
+  }
+
+  .sc-day { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+  .sc-date { font-size: 0.68rem; color: #8ab0cc; font-family: 'Nunito Sans', sans-serif; margin-bottom: 3px; }
+  .sc-laptops { font-family: 'Nunito Sans', sans-serif; font-size: 0.82rem; font-weight: 700; color: var(--text); }
+
+  /* ── TABEL ── */
+  .grid-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    background: var(--surface);
+  }
+
+  table { width: 100%; border-collapse: collapse; min-width: 720px; }
+
+  thead th {
+    background: var(--surface2);
+    padding: 10px 12px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border);
+    text-align: center;
+  }
+
+  thead th:first-child { text-align: left; width: 110px; }
+
+  .th-date {
+    display: block;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: #90b8d8;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 2px;
+  }
+
+  .today-header { background: #dbeafe !important; color: var(--accent) !important; }
+  .today-col    { background: #f0f7ff !important; }
+
+  .hour-label {
+    padding: 10px 12px;
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border-right: 1px solid var(--border);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .hour-label span {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 0.68rem;
+    display: block;
+    color: #a8c8e0;
+    font-weight: 400;
+    margin-top: 1px;
+  }
+
+  td.cell { padding: 5px; border: 1px solid var(--border); vertical-align: top; min-width: 135px; }
+
+  /* ── RESERVERINGSKNOP ── */
+  .add-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 58px;
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    gap: 2px;
+    padding: 6px 8px;
+  }
+
+  .add-btn .btn-action {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .add-btn .btn-avail {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-family: 'Nunito Sans', sans-serif;
+  }
+
+  .add-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-xlight);
+  }
+
+  .add-btn:hover .btn-action { color: var(--accent); }
+  .add-btn:hover .btn-avail  { color: var(--accent2); }
+
+  .add-btn.full {
+    border-color: #dce6ef;
+    background: var(--surface2);
+    cursor: not-allowed;
+  }
+
+  .add-btn.full .btn-action { color: #aac; }
+  .add-btn.full .btn-avail  { color: #aac; }
+  .add-btn.full:hover { border-color: #dce6ef; background: var(--surface2); }
+
+  /* ── CHIPS ── */
+  .reservation-chip {
+    padding: 5px 8px;
+    border-radius: 7px;
+    margin-bottom: 4px;
+    font-size: 0.74rem;
+    line-height: 1.35;
+    position: relative;
+    cursor: default;
+  }
+
+  .chip-normal   { background: var(--accent-light);   border-left: 3px solid var(--accent); }
+  .chip-priority { background: var(--priority-light); border-left: 3px solid var(--priority); }
+
+  .chip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+
+  .chip-name { font-weight: 800; font-family: 'Nunito Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.04em; }
+
+  .chip-actions { display: flex; gap: 3px; opacity: 0; transition: opacity 0.15s; }
+  .reservation-chip:hover .chip-actions { opacity: 1; }
+
+  .chip-edit, .chip-delete {
+    background: none; border: none; cursor: pointer;
+    font-size: 0.65rem; padding: 1px 3px; line-height: 1;
+    color: var(--text-muted); border-radius: 3px;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .chip-edit:hover   { background: var(--accent-light); color: var(--accent); }
+  .chip-delete:hover { background: var(--danger-light); color: var(--danger); }
+
+  .chip-info { color: var(--text-muted); font-size: 0.69rem; }
+  .chip-original { font-size: 0.65rem; color: #8ab; font-style: italic; margin-top: 2px; }
+
+  .chip-badge {
+    display: inline-block; font-size: 0.6rem; font-weight: 700;
+    padding: 1px 5px; border-radius: 3px; margin-right: 2px;
+  }
+
+  .badge-priority { background: var(--priority); color: white; }
+  .badge-weeks    { background: var(--accent);   color: white; }
+  .badge-kar      { background: #2979ff;          color: white; }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(255,255,255,0.75);
+    z-index: 200; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+  }
+
+  .loading-overlay.show { display: flex; }
+
+  .spinner {
+    width: 36px; height: 36px;
+    border: 4px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,30,60,0.45);
+    z-index: 100; align-items: center; justify-content: center; padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 26px;
+    width: 100%; max-width: 450px;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.18s ease;
+    max-height: 94vh;
+    overflow-y: auto;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(12px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .modal-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 2px; color: var(--accent); }
+  .modal-sub   { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5; }
+
+  .avail-box {
+    background: var(--accent-light);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 14px;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.8rem;
+  }
+
+  .avail-box .num {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 1.4rem; font-weight: 800;
+    color: var(--accent);
+  }
+
+  .avail-box .avail-label { font-weight: 600; }
+
+  .priority-note {
+    font-size: 0.74rem; color: var(--priority);
+    background: var(--priority-light);
+    border-radius: 7px; padding: 6px 10px;
+    margin-bottom: 14px; display: none;
+  }
+  .priority-note.show { display: block; }
+
+  .edit-note {
+    font-size: 0.74rem; color: var(--warn);
+    background: var(--warn-light);
+    border-radius: 7px; padding: 6px 10px;
+    margin-bottom: 14px;
+  }
+
+  .original-note {
+    font-size: 0.72rem; color: var(--text-muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px; padding: 6px 10px;
+    margin-bottom: 14px;
+  }
+
+  .field { margin-bottom: 12px; }
+
+  label {
+    display: block; font-size: 0.72rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-muted); margin-bottom: 4px;
+  }
+
+  input, select {
+    width: 100%; padding: 9px 11px;
+    border: 2px solid var(--border);
+    border-radius: 9px; font-family: inherit; font-size: 0.88rem;
+    background: var(--surface); color: var(--text);
+    transition: border-color 0.15s; -webkit-appearance: none;
+  }
+
+  input:focus, select:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+
+  input.error, select.error { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-light); }
+
+  .error-msg { font-size: 0.71rem; color: var(--danger); margin-top: 3px; display: none; }
+  .error-msg.show { display: block; }
+
+  .hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; }
+
+  .recurring-note {
+    font-size: 0.72rem; color: var(--warn);
+    background: var(--warn-light);
+    border-radius: 7px; padding: 6px 10px;
+    margin-top: -6px; margin-bottom: 12px; display: none;
+  }
+
+  .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+
+  .btn {
+    flex: 1; padding: 10px; border-radius: 9px;
+    font-family: inherit; font-size: 0.88rem; font-weight: 800;
+    cursor: pointer; border: none; transition: all 0.15s;
+  }
+
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #0d47a1; }
+  .btn-secondary { background: var(--surface2); color: var(--text-muted); border: 2px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+
+  tr:last-child td { border-bottom: none; }
+
+  /* cap bar */
+  .cap-label { font-size: 0 /* verborgen – geen totaal */; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">💻</div>
+    <h2>Laptop Reservering ISK Almelo</h2>
+    <p>Voer het wachtwoord in om verder te gaan</p>
+    <input type="password" id="pwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-err" id="loginErr"></div>
+    <button class="login-btn" onclick="doLogin()">Inloggen</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Laden…</div>
+</div>
+
+<!-- APP (verborgen tot login) -->
+<div id="app" style="display:none">
+
+<header>
+  <div>
+    <h1>💻 Laptop Reservering ISK Almelo</h1>
+    <div class="subtitle">5 laptopkarren · 24 laptops per kar</div>
+  </div>
+</header>
+
+<!-- MAAND/WEEK NAVIGATIE -->
+<div class="month-nav">
+  <div class="month-row" id="monthRow"></div>
+</div>
+
+<!-- KAR SELECTOR -->
+<div class="kar-bar">
+  <span class="kar-bar-label">Laptopkar:</span>
+  <div class="kar-buttons" id="karButtons"></div>
+</div>
+
+<div class="container">
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot dot-priority"></div> Voorrangsvak (ICT / Engels / Burgerschap)</div>
+    <div class="legend-item"><div class="legend-dot dot-normal"></div>   Normaal vak</div>
+    <div class="legend-item"><div class="legend-dot dot-warn"></div>     Bijna vol (&gt;75%)</div>
+    <div class="legend-item"><div class="legend-dot dot-danger"></div>   Vol</div>
+  </div>
+
+  <!-- DAG SAMENVATTING -->
+  <div class="day-summary" id="daySummary"></div>
+
+  <!-- ROOSTER -->
+  <div class="grid-wrapper">
+    <table>
+      <thead><tr id="headRow"></tr></thead>
+      <tbody id="roosterBody"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Reservering toevoegen</div>
+    <div class="modal-sub"   id="modalSub"></div>
+
+    <div id="editNoteBox"     class="edit-note"     style="display:none">✏️ Je wijzigt een bestaande reservering. De oorspronkelijke reservering blijft zichtbaar.</div>
+    <div id="originalNoteBox" class="original-note" style="display:none"></div>
+
+    <div class="avail-box">
+      <div class="num" id="availNum">24</div>
+      <div><span class="avail-label">laptops beschikbaar</span><br><span style="font-size:0.72rem;color:var(--text-muted)" id="karNameInModal"></span></div>
+    </div>
+
+    <div class="priority-note" id="priorityNote">⭐ Dit is een voorrangsvak — reservering heeft prioriteit.</div>
+
+    <div class="field">
+      <label>Naam docent (3 letters)</label>
+      <input type="text" id="fName" maxlength="3" placeholder="bijv. JAN" autocomplete="off"
+        style="text-transform:uppercase;font-family:'Nunito Sans',sans-serif;letter-spacing:0.12em;font-size:1.05rem;font-weight:700;">
+      <div class="error-msg" id="errName">Vul precies 3 letters in (geen cijfers of tekens).</div>
+    </div>
+
+    <div class="field">
+      <label>Lokaal</label>
+      <input type="text" id="fLokaal" placeholder="bijv. L12 of C03" autocomplete="off"
+        style="text-transform:uppercase;font-family:'Nunito Sans',sans-serif;font-weight:600;">
+      <div class="error-msg" id="errLokaal">Lokaal moet beginnen met L of C gevolgd door cijfers (bijv. L12).</div>
+    </div>
+
+    <div class="field">
+      <label>Vak</label>
+      <select id="fVak" onchange="onVakChange()">
+        <option value="">— Kies een vak —</option>
+        <optgroup label="⭐ Voorrang">
+          <option value="ICT">ICT</option>
+          <option value="Engels">Engels</option>
+          <option value="Burgerschap">Burgerschap</option>
+        </optgroup>
+        <optgroup label="Overig">
+          <option value="Nederlands">Nederlands</option>
+          <option value="Rekenen/Wiskunde">Rekenen/Wiskunde</option>
+        </optgroup>
+      </select>
+      <div class="error-msg" id="errVak">Kies een vak.</div>
+    </div>
+
+    <div class="field">
+      <label>Aantal laptops</label>
+      <input type="number" id="fLaptops" min="1" max="24" value="12">
+      <div class="hint">Max beschikbaar dit uur: <strong id="maxHint">24</strong> laptops</div>
+      <div class="error-msg" id="errLaptops">Voer een geldig aantal in (min. 1, max. beschikbaar).</div>
+    </div>
+
+    <div class="field" id="wekenField">
+      <label>Aantal weken herhalen</label>
+      <select id="fWeken" onchange="updateRecurringNote()">
+        <option value="1">1 week (alleen deze week)</option>
+        <option value="2">2 weken</option>
+        <option value="3">3 weken</option>
+        <option value="4">4 weken</option>
+        <option value="5">5 weken</option>
+        <option value="6">6 weken</option>
+        <option value="7">7 weken</option>
+        <option value="8">8 weken</option>
+        <option value="9">9 weken</option>
+        <option value="10">10 weken</option>
+      </select>
+    </div>
+    <div class="recurring-note" id="recurringNote"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Annuleren</button>
+      <button class="btn btn-primary"   onclick="confirmReservation()" id="saveBtn">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CONSTANTEN
+// ══════════════════════════════════════════════════════════
+const PASSWORD       = 'ISK2026!';
+const BIN_ID         = '69c3d9b8c3097a1dd55b4b6a';
+const API_KEY        = '$2a$10$yxXl6AKN36uW/ZZoQrcqyOpOf9rtqvyYU6v7fxDaVL.ErD9FC/9SS';
+const JSONBIN_URL    = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+const DAYS_NL        = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'];
+const SHORT_MONTHS   = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+const FULL_MONTHS    = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+
+const HOURS = [
+  { label: '1e uur', time: '08:30–09:20' },
+  { label: '2e uur', time: '09:20–10:10' },
+  { label: '3e uur', time: '10:30–11:20' },
+  { label: '4e uur', time: '11:20–12:10' },
+  { label: '5e uur', time: '13:00–13:50' },
+];
+
+const KARREN = [
+  { id: 0, name: 'Laptopkar 1', laptops: 24 },
+  { id: 1, name: 'Laptopkar 2', laptops: 24 },
+  { id: 2, name: 'Laptopkar 3', laptops: 24 },
+  { id: 3, name: 'Laptopkar 4', laptops: 24 },
+  { id: 4, name: 'Laptopkar 5', laptops: 24 },
+];
+
+const PRIORITY_VAKKEN = ['ICT','Engels','Burgerschap'];
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let db            = {};   // hele dataset: { "w{wi}_d{di}_h{hi}": [ {reservation} ] }
+let selectedKar   = 0;
+let currentWeekIdx= 0;
+let pending       = null; // { wi, di, hi, editIdx? }
+let ALL_WEEKS     = [];
+
+// ══════════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════════
+function doLogin() {
+  const val = document.getElementById('pwInput').value;
+  if (val === PASSWORD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    const inp = document.getElementById('pwInput');
+    document.getElementById('loginErr').textContent = 'Onjuist wachtwoord, probeer opnieuw.';
+    inp.classList.add('shake');
+    setTimeout(() => inp.classList.remove('shake'), 400);
+    inp.value = '';
+    inp.focus();
+  }
+}
+
+document.getElementById('pwInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ══════════════════════════════════════════════════════════
+// DATUM HELPERS
+// ══════════════════════════════════════════════════════════
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+function getMondayOf(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function addDays(date, n) {
+  const d = new Date(date); d.setDate(d.getDate() + n); return d;
+}
+
+function fmtDate(date) { return `${date.getDate()} ${SHORT_MONTHS[date.getMonth()]}`; }
+
+function isToday(date) {
+  return date.getFullYear() === TODAY.getFullYear() &&
+         date.getMonth()    === TODAY.getMonth()    &&
+         date.getDate()     === TODAY.getDate();
+}
+
+function weekContainsToday(wi) {
+  const mon = ALL_WEEKS[wi].monday;
+  const fri = addDays(mon, 4);
+  return mon <= TODAY && TODAY <= fri;
+}
+
+function buildWeeks() {
+  const RANGE_END = new Date(2026, 6, 31);
+  ALL_WEEKS = [];
+  let cur = getMondayOf(addDays(TODAY, -35)); // 5 weken terug
+  let idx = 1;
+  while (cur <= RANGE_END) {
+    ALL_WEEKS.push({ index: idx++, monday: new Date(cur) });
+    cur = addDays(cur, 7);
+  }
+  const ti = ALL_WEEKS.findIndex(w => weekContainsToday(ALL_WEEKS.indexOf(w)));
+  currentWeekIdx = ti >= 0 ? ti : 0;
+}
+
+// ══════════════════════════════════════════════════════════
+// JSONBIN OPSLAG
+// ══════════════════════════════════════════════════════════
+function showLoading(msg) {
+  document.getElementById('loadingText').textContent = msg || 'Laden…';
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+async function loadFromBin() {
+  showLoading('Reserveringen laden…');
+  try {
+    const r = await fetch(JSONBIN_URL + '/latest', {
+      headers: { 'X-Master-Key': API_KEY }
+    });
+    const json = await r.json();
+    db = json.record || {};
+  } catch(e) {
+    console.warn('Laden mislukt, lege database.', e);
+    db = {};
+  }
+  hideLoading();
+}
+
+async function saveToBin() {
+  showLoading('Opslaan…');
+  try {
+    await fetch(JSONBIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY
+      },
+      body: JSON.stringify(db)
+    });
+  } catch(e) {
+    console.warn('Opslaan mislukt.', e);
+    alert('Opslaan mislukt. Controleer je internetverbinding.');
+  }
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════════════════
+// DATA HELPERS
+// ══════════════════════════════════════════════════════════
+function cellKey(wi, di, hi) { return `w${wi}_d${di}_h${hi}`; }
+
+function getRes(wi, di, hi) { return db[cellKey(wi,di,hi)] || []; }
+
+function getLaptopsUsed(wi, di, hi, karId) {
+  return getRes(wi,di,hi)
+    .filter(r => r.kar === karId)
+    .reduce((s,r) => s + r.laptops, 0);
+}
+
+function getAvail(wi, di, hi, karId) {
+  return KARREN[karId].laptops - getLaptopsUsed(wi, di, hi, karId);
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+async function initApp() {
+  buildWeeks();
+  await loadFromBin();
+  renderMonthNav();
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════════
+// MAAND/WEEK NAVIGATIE
+// ══════════════════════════════════════════════════════════
+function renderMonthNav() {
+  const row = document.getElementById('monthRow');
+  row.innerHTML = '';
+
+  // Groepeer weken per maand (op basis van de vrijdag van de week)
+  const groups = {};
+  ALL_WEEKS.forEach((w, wi) => {
+    const fri = addDays(w.monday, 4);
+    const key = `${fri.getFullYear()}-${fri.getMonth()}`;
+    if (!groups[key]) groups[key] = { year: fri.getFullYear(), month: fri.getMonth(), weeks: [] };
+    groups[key].weeks.push(wi);
+  });
+
+  Object.values(groups).forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'month-group';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'month-label';
+    lbl.textContent = `${FULL_MONTHS[g.month]} ${g.year}`;
+    div.appendChild(lbl);
+
+    const pills = document.createElement('div');
+    pills.className = 'week-pills';
+
+    g.weeks.forEach(wi => {
+      const w = ALL_WEEKS[wi];
+      const mon = w.monday;
+      const fri = addDays(mon, 4);
+      const isThisWeek = weekContainsToday(wi);
+
+      const btn = document.createElement('button');
+      btn.id = `wpill-${wi}`;
+      btn.className = 'week-pill' +
+        (wi === currentWeekIdx ? ' active' : '') +
+        (isThisWeek ? ' has-today' : '');
+      btn.innerHTML = `${fmtDate(mon)}<br><span style="opacity:.7">${fmtDate(fri)}</span>`;
+      btn.onclick = () => { currentWeekIdx = wi; updateWeekPills(); renderAll(); };
+      pills.appendChild(btn);
+    });
+
+    div.appendChild(pills);
+    row.appendChild(div);
+  });
+
+  // Scroll actieve week in beeld
+  setTimeout(() => {
+    const el = document.getElementById(`wpill-${currentWeekIdx}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, 100);
+}
+
+function updateWeekPills() {
+  ALL_WEEKS.forEach((_, wi) => {
+    const el = document.getElementById(`wpill-${wi}`);
+    if (!el) return;
+    el.className = 'week-pill' +
+      (wi === currentWeekIdx ? ' active' : '') +
+      (weekContainsToday(wi) ? ' has-today' : '');
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// KAR BAR
+// ══════════════════════════════════════════════════════════
+function renderKarBar() {
+  const wrap = document.getElementById('karButtons');
+  wrap.innerHTML = '';
+
+  KARREN.forEach(kar => {
+    // Beschikbare laptops voor deze kar op het huidige lesuur van vandaag
+    // (som over alle uren als het niet vandaag is in deze week)
+    let availLabel = '';
+    const todayDi = DAYS_NL.findIndex((_, di) => isToday(addDays(ALL_WEEKS[currentWeekIdx].monday, di)));
+
+    if (todayDi >= 0) {
+      // Vandaag zit in deze week – toon per uur
+      const perHour = HOURS.map((_, hi) => getAvail(currentWeekIdx, todayDi, hi, kar.id));
+      const minAvail = Math.min(...perHour);
+      availLabel = minAvail <= 0 ? 'vol' : `${minAvail}–${Math.max(...perHour)} vrij vandaag`;
+    } else {
+      // Andere week: toon totale beschikbaarheid (alle uren × alle dagen)
+      let totalAvail = 0;
+      for (let di=0; di<5; di++)
+        for (let hi=0; hi<5; hi++)
+          totalAvail += getAvail(currentWeekIdx, di, hi, kar.id);
+      availLabel = `${totalAvail} vrij (week)`;
+    }
+
+    const btn = document.createElement('button');
+    btn.className = 'kar-btn' + (selectedKar === kar.id ? ' active' : '');
+    btn.innerHTML = `<span class="kar-name">${kar.name}</span><span class="kar-avail">${kar.laptops} laptops · ${availLabel}</span>`;
+    btn.onclick = () => { selectedKar = kar.id; renderAll(); };
+    wrap.appendChild(btn);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════
+function renderAll() {
+  updateWeekPills();
+  renderKarBar();
+  renderSummary();
+  renderTable();
+}
+
+function renderSummary() {
+  const el = document.getElementById('daySummary');
+  el.innerHTML = '';
+  DAYS_NL.forEach((d, di) => {
+    const date = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
+    const avail = HOURS.reduce((s,_,hi) => s + getAvail(currentWeekIdx, di, hi, selectedKar), 0);
+    const total = KARREN[selectedKar].laptops * HOURS.length;
+    const card  = document.createElement('div');
+    card.className = 'summary-card';
+    card.innerHTML = `
+      <div class="sc-day">${d}</div>
+      <div class="sc-date">${fmtDate(date)}</div>
+      <div class="sc-laptops">${avail} / ${total} vrij 💻</div>`;
+    el.appendChild(card);
+  });
+}
+
+function renderTable() {
+  const kar = KARREN[selectedKar];
+
+  // Header
+  const headRow = document.getElementById('headRow');
+  headRow.innerHTML = '<th>Lesuur</th>';
+  DAYS_NL.forEach((d, di) => {
+    const date = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
+    const cls  = isToday(date) ? ' today-header' : '';
+    headRow.innerHTML += `<th class="${cls}">${d}<span class="th-date">${fmtDate(date)}</span></th>`;
+  });
+
+  const tbody = document.getElementById('roosterBody');
+  tbody.innerHTML = '';
+
+  HOURS.forEach((h, hi) => {
+    const tr = document.createElement('tr');
+
+    const hourTd = document.createElement('td');
+    hourTd.className = 'hour-label';
+    hourTd.innerHTML = `${h.label}<span>${h.time}</span>`;
+    tr.appendChild(hourTd);
+
+    DAYS_NL.forEach((_, di) => {
+      const date  = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
+      const td    = document.createElement('td');
+      td.className = 'cell' + (isToday(date) ? ' today-col' : '');
+
+      const avail  = getAvail(currentWeekIdx, di, hi, selectedKar);
+      const used   = kar.laptops - avail;
+      const pct    = used / kar.laptops;
+
+      // Chips – toon alleen reserveringen van geselecteerde kar
+      getRes(currentWeekIdx, di, hi).forEach((r, ri) => {
+        if (r.kar !== selectedKar) return;
+        const isPrio = PRIORITY_VAKKEN.includes(r.vak);
+        const chip   = document.createElement('div');
+        chip.className = `reservation-chip ${isPrio ? 'chip-priority' : 'chip-normal'}`;
+
+        const origLine = r.editedBy
+          ? `<div class="chip-original">✏️ gewijzigd door ${r.editedBy} (was: ${r.originalName || '?'})</div>`
+          : '';
+
+        chip.innerHTML = `
+          <div class="chip-header">
+            <span class="chip-name">${r.name}</span>
+            <div class="chip-actions">
+              <button class="chip-edit"   onclick="openEditModal(${currentWeekIdx},${di},${hi},${ri})" title="Wijzigen">✏️</button>
+              <button class="chip-delete" onclick="confirmDelete(${currentWeekIdx},${di},${hi},${ri})"  title="Verwijder">✕</button>
+            </div>
+          </div>
+          <div class="chip-info">
+            ${isPrio ? '<span class="chip-badge badge-priority">Voorrang</span>' : ''}
+            <span class="chip-badge badge-weeks">×${r.weeks}w</span>
+            ${r.vak} · ${r.lokaal} · ${r.laptops}💻
+          </div>
+          ${origLine}`;
+        td.appendChild(chip);
+      });
+
+      // + Reserveren knop
+      const btn = document.createElement('button');
+      if (avail <= 0) {
+        btn.className = 'add-btn full';
+        btn.innerHTML = `
+          <div class="btn-action">🔒 Vol</div>
+          <div class="btn-avail">0 van ${kar.laptops} laptops vrij</div>`;
+        btn.disabled = true;
+      } else {
+        btn.className = 'add-btn';
+        const fillColor = pct < 0.75 ? '#1b5e20' : pct < 1 ? '#e65100' : '#b71c1c';
+        btn.innerHTML = `
+          <div class="btn-action">＋ Reserveren</div>
+          <div class="btn-avail" style="color:${fillColor};font-weight:800">${avail} van ${kar.laptops} laptops vrij</div>`;
+        btn.onclick = () => openModal(di, hi, avail);
+      }
+      td.appendChild(btn);
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// MODAL – NIEUW
+// ══════════════════════════════════════════════════════════
+function openModal(di, hi, avail) {
+  const date = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
+  pending    = { wi: currentWeekIdx, di, hi, editIdx: null };
+
+  document.getElementById('modalTitle').textContent   = 'Reservering toevoegen';
+  document.getElementById('modalSub').textContent     =
+    `${DAYS_NL[di]} ${fmtDate(date)} · ${HOURS[hi].label} (${HOURS[hi].time}) · ${KARREN[selectedKar].name}`;
+  document.getElementById('availNum').textContent     = avail;
+  document.getElementById('maxHint').textContent      = avail;
+  document.getElementById('karNameInModal').textContent = KARREN[selectedKar].name;
+  document.getElementById('fLaptops').max             = avail;
+  document.getElementById('fLaptops').value           = Math.min(12, avail);
+  document.getElementById('fName').value              = '';
+  document.getElementById('fLokaal').value            = '';
+  document.getElementById('fVak').value               = '';
+  document.getElementById('fWeken').value             = '1';
+  document.getElementById('wekenField').style.display = '';
+  document.getElementById('editNoteBox').style.display      = 'none';
+  document.getElementById('originalNoteBox').style.display  = 'none';
+  document.getElementById('priorityNote').classList.remove('show');
+  document.getElementById('recurringNote').style.display    = 'none';
+  document.getElementById('saveBtn').textContent = 'Reserveren';
+  clearErrors();
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('fName').focus(), 50);
+}
+
+// ══════════════════════════════════════════════════════════
+// MODAL – WIJZIGEN
+// ══════════════════════════════════════════════════════════
+function openEditModal(wi, di, hi, ri) {
+  const res  = getRes(wi, di, hi)[ri];
+  const date = addDays(ALL_WEEKS[wi].monday, di);
+
+  // Beschikbare laptops: huidig gebruik minus de te wijzigen reservering
+  const usedWithout = getLaptopsUsed(wi, di, hi, selectedKar) - res.laptops;
+  const avail = KARREN[selectedKar].laptops - usedWithout;
+
+  pending = { wi, di, hi, editIdx: ri };
+
+  document.getElementById('modalTitle').textContent = 'Reservering wijzigen';
+  document.getElementById('modalSub').textContent   =
+    `${DAYS_NL[di]} ${fmtDate(date)} · ${HOURS[hi].label} (${HOURS[hi].time}) · ${KARREN[selectedKar].name}`;
+  document.getElementById('availNum').textContent   = avail;
+  document.getElementById('maxHint').textContent    = avail;
+  document.getElementById('karNameInModal').textContent = KARREN[selectedKar].name;
+  document.getElementById('fLaptops').max           = avail;
+  document.getElementById('fLaptops').value         = res.laptops;
+  document.getElementById('fName').value            = '';
+  document.getElementById('fLokaal').value          = res.lokaal;
+  document.getElementById('fVak').value             = res.vak;
+  document.getElementById('fWeken').value           = '1';
+  document.getElementById('wekenField').style.display     = 'none'; // geen herhaling bij wijzigen
+  document.getElementById('recurringNote').style.display  = 'none';
+  document.getElementById('editNoteBox').style.display    = 'block';
+  document.getElementById('saveBtn').textContent = 'Wijziging opslaan';
+
+  // Toon originele info
+  const orig = res.editedBy
+    ? `Origineel: ${res.originalName || res.name} (gewijzigd door ${res.editedBy})`
+    : `Origineel ingevoerd door: ${res.name}`;
+  document.getElementById('originalNoteBox').textContent = orig;
+  document.getElementById('originalNoteBox').style.display = 'block';
+
+  const isPrio = PRIORITY_VAKKEN.includes(res.vak);
+  document.getElementById('priorityNote').classList.toggle('show', isPrio);
+
+  clearErrors();
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('fName').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  pending = null;
+}
+
+function onVakChange() {
+  const vak = document.getElementById('fVak').value;
+  document.getElementById('priorityNote').classList.toggle('show', PRIORITY_VAKKEN.includes(vak));
+}
+
+function updateRecurringNote() {
+  const weeks = parseInt(document.getElementById('fWeken').value);
+  const note  = document.getElementById('recurringNote');
+  if (weeks > 1 && pending) {
+    const endIdx = Math.min(pending.wi + weeks - 1, ALL_WEEKS.length - 1);
+    const endFri = addDays(ALL_WEEKS[endIdx].monday, 4);
+    note.style.display = 'block';
+    note.textContent = `📅 Herhaald voor ${weeks} weken t/m ${fmtDate(endFri)} ${endFri.getFullYear()}.`;
+  } else {
+    note.style.display = 'none';
+  }
+}
+
+function clearErrors() {
+  ['errName','errLokaal','errVak','errLaptops'].forEach(id =>
+    document.getElementById(id).classList.remove('show'));
+  ['fName','fLokaal','fVak','fLaptops'].forEach(id =>
+    document.getElementById(id).classList.remove('error'));
+}
+
+function showErr(errId, fieldId) {
+  document.getElementById(errId).classList.add('show');
+  document.getElementById(fieldId).classList.add('error');
+}
+
+function validate() {
+  clearErrors();
+  let ok = true;
+  const name    = document.getElementById('fName').value.trim().toUpperCase();
+  const lokaal  = document.getElementById('fLokaal').value.trim().toUpperCase();
+  const vak     = document.getElementById('fVak').value;
+  const laptops = parseInt(document.getElementById('fLaptops').value);
+  const avail   = parseInt(document.getElementById('fLaptops').max);
+
+  if (!/^[A-Z]{3}$/.test(name))          { showErr('errName','fName');       ok=false; }
+  if (!/^[LC]\d+$/i.test(lokaal))        { showErr('errLokaal','fLokaal');   ok=false; }
+  if (!vak)                               { showErr('errVak','fVak');         ok=false; }
+  if (!laptops||laptops<1||laptops>avail) { showErr('errLaptops','fLaptops'); ok=false; }
+  return ok;
+}
+
+async function confirmReservation() {
+  if (!validate()) return;
+  const name    = document.getElementById('fName').value.trim().toUpperCase();
+  const lokaal  = document.getElementById('fLokaal').value.trim().toUpperCase();
+  const vak     = document.getElementById('fVak').value;
+  const laptops = parseInt(document.getElementById('fLaptops').value);
+  const weeks   = parseInt(document.getElementById('fWeken').value);
+  const kar     = selectedKar;
+  const { wi, di, hi, editIdx } = pending;
+
+  if (editIdx !== null) {
+    // WIJZIGEN – alleen deze ene reservering
+    const k   = cellKey(wi, di, hi);
+    const res = db[k][editIdx];
+    // Bewaar originele naam als er nog geen eerdere wijziging was
+    const originalName = res.originalName || res.name;
+    db[k][editIdx] = {
+      ...res,
+      lokaal, vak, laptops,
+      editedBy:     name,
+      originalName: originalName,
+      editedAt:     new Date().toISOString()
+    };
+  } else {
+    // NIEUW – herhaal voor meerdere weken
+    for (let w = 0; w < weeks; w++) {
+      const targetWi = wi + w;
+      if (targetWi >= ALL_WEEKS.length) break;
+      const k = cellKey(targetWi, di, hi);
+      if (!db[k]) db[k] = [];
+      const avail = KARREN[kar].laptops - getLaptopsUsed(targetWi, di, hi, kar);
+      if (laptops <= avail) {
+        db[k].push({ name, lokaal, vak, laptops, weeks, kar, createdAt: new Date().toISOString() });
+      }
+    }
+  }
+
+  closeModal();
+  await saveToBin();
+  renderAll();
+}
+
+function confirmDelete(wi, di, hi, ri) {
+  const res = getRes(wi, di, hi)[ri];
+  if (!confirm(`Reservering van ${res.name} (${res.vak}, ${res.laptops} laptops) verwijderen?`)) return;
+  deleteRes(wi, di, hi, ri);
+}
+
+async function deleteRes(wi, di, hi, ri) {
+  const k = cellKey(wi, di, hi);
+  if (db[k]) {
+    db[k].splice(ri, 1);
+    await saveToBin();
+    renderAll();
+  }
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+</script>
+</body>
+</html>
