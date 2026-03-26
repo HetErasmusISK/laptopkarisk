@@ -8,24 +8,24 @@
   @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Nunito+Sans:wght@400;500;600;700&display=swap');
 
   :root {
-    --bg:            #e8f2fb;
-    --surface:       #ffffff;
-    --surface2:      #f0f7ff;
-    --border:        #c2d9ef;
-    --text:          #1a2a3a;
-    --text-muted:    #5a7a9a;
+    --bg:            #122540;
+    --surface:       #163050;
+    --surface2:      #1a3a5e;
+    --border:        #2a5278;
+    --text:          #ddeeff;
+    --text-muted:    #90c4e4;
     --accent:        #1565c0;
     --accent2:       #1976d2;
-    --accent-light:  #dceefb;
-    --accent-xlight: #eef6fd;
+    --accent-light:  #0d3a5c;
+    --accent-xlight: #0a2f4a;
     --priority:      #7b1fa2;
-    --priority-light:#f3e5f5;
+    --priority-light:#2d1040;
     --warn:          #e65100;
-    --warn-light:    #fff3e0;
+    --warn-light:    #2d1e00;
     --danger:        #b71c1c;
-    --danger-light:  #ffebee;
+    --danger-light:  #2d0a0a;
     --ok:            #1b5e20;
-    --ok-light:      #e8f5e9;
+    --ok-light:      #0a2a0a;
     --shadow:        0 1px 4px rgba(21,101,192,0.08), 0 4px 16px rgba(21,101,192,0.06);
     --shadow-lg:     0 8px 40px rgba(21,101,192,0.18);
   }
@@ -154,7 +154,7 @@
 
   /* ── MAAND/WEEK NAV ── */
   .month-nav {
-    background: var(--surface);
+    background: var(--surface2);
     border-bottom: 2px solid var(--border);
     padding: 10px 28px;
     overflow-x: auto;
@@ -177,7 +177,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    color: var(--text-muted);
+    color: #80b8d8;
     padding: 0 6px;
     white-space: nowrap;
   }
@@ -188,12 +188,12 @@
     padding: 4px 9px;
     border-radius: 6px;
     border: 1.5px solid var(--border);
-    background: var(--surface2);
+    background: #12304e;
     cursor: pointer;
     font-family: inherit;
     font-size: 0.72rem;
     font-weight: 600;
-    color: var(--text-muted);
+    color: #a0cce8;
     white-space: nowrap;
     transition: all 0.12s;
     line-height: 1.3;
@@ -222,7 +222,7 @@
 
   /* ── KAR BAR ── */
   .kar-bar {
-    background: var(--surface2);
+    background: #122540;
     border-bottom: 2px solid var(--border);
     padding: 10px 28px;
     display: flex;
@@ -236,7 +236,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--text-muted);
+    color: #80b8d8;
     white-space: nowrap;
   }
 
@@ -262,7 +262,7 @@
   .kar-btn.active { border-color: var(--accent); background: var(--accent); color: white; }
 
   .kar-btn .kar-name { font-size: 0.8rem; font-weight: 800; }
-  .kar-btn .kar-avail { font-size: 0.68rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; opacity: 0.78; }
+  .kar-btn .kar-avail { font-size: 0.68rem; font-family: 'Nunito Sans', sans-serif; font-weight: 600; color: #90c4e4; opacity: 1; }
   .kar-btn.active .kar-avail { opacity: 0.9; }
 
   /* ── CONTAINER ── */
@@ -273,7 +273,7 @@
     flex-wrap: wrap; align-items: center;
   }
 
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.74rem; color: var(--text-muted); }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.74rem; color: #90c4e4; }
   .legend-dot { width: 9px; height: 9px; border-radius: 2px; }
   .dot-priority { background: var(--priority); }
   .dot-normal   { background: var(--accent); }
@@ -284,15 +284,15 @@
   .day-summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin-bottom: 14px; }
 
   .summary-card {
-    background: var(--surface);
+    background: #163855;
     border: 1.5px solid var(--border);
     border-radius: 10px;
     padding: 8px 12px;
     box-shadow: var(--shadow);
   }
 
-  .sc-day { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-  .sc-date { font-size: 0.68rem; color: #8ab0cc; font-family: 'Nunito Sans', sans-serif; margin-bottom: 3px; }
+  .sc-day { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #b8daf2; }
+  .sc-date { font-size: 0.68rem; color: #6aaace; font-family: 'Nunito Sans', sans-serif; margin-bottom: 3px; }
   .sc-laptops { font-family: 'Nunito Sans', sans-serif; font-size: 0.82rem; font-weight: 700; color: var(--text); }
 
   /* ── TABEL ── */
@@ -312,7 +312,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--text-muted);
+    color: #a8d4f0;
     border-bottom: 2px solid var(--border);
     text-align: center;
   }
@@ -324,20 +324,20 @@
     font-family: 'Nunito Sans', sans-serif;
     font-size: 0.68rem;
     font-weight: 400;
-    color: #90b8d8;
+    color: #6a9aba;
     text-transform: none;
     letter-spacing: 0;
     margin-top: 2px;
   }
 
-  .today-header { background: #dbeafe !important; color: var(--accent) !important; }
-  .today-col    { background: #f0f7ff !important; }
+  .today-header { background: #1a4a8a !important; color: #90caf9 !important; }
+  .today-col    { background: #1e4a78 !important; }
 
   .hour-label {
     padding: 10px 12px;
     font-size: 0.84rem;
     font-weight: 800;
-    color: var(--text-muted);
+    color: #a8d4f0;
     background: var(--surface2);
     border-right: 1px solid var(--border);
     vertical-align: middle;
@@ -348,12 +348,12 @@
     font-family: 'Nunito Sans', sans-serif;
     font-size: 0.68rem;
     display: block;
-    color: #a8c8e0;
+    color: #6a9aba;
     font-weight: 400;
     margin-top: 1px;
   }
 
-  td.cell { padding: 5px; border: 1px solid var(--border); vertical-align: top; min-width: 135px; }
+  td.cell { padding: 5px; border: 1px solid var(--border); vertical-align: top; min-width: 135px; background: #163a60; }
 
   /* ── RESERVERINGSKNOP ── */
   .add-btn {
@@ -363,9 +363,9 @@
     justify-content: center;
     width: 100%;
     min-height: 58px;
-    border: 2px dashed var(--border);
+    border: 2px dashed #2a5a80;
     border-radius: 10px;
-    background: none;
+    background: #12304e;
     cursor: pointer;
     font-family: inherit;
     color: var(--text-muted);
@@ -386,7 +386,7 @@
   .add-btn .btn-avail {
     font-size: 0.76rem;
     font-weight: 700;
-    color: var(--text-muted);
+    color: #90c4e4;
     font-family: 'Nunito Sans', sans-serif;
   }
 
@@ -399,14 +399,14 @@
   .add-btn:hover .btn-avail  { color: var(--accent2); }
 
   .add-btn.full {
-    border-color: #dce6ef;
-    background: var(--surface2);
+    border-color: #1a3a52;
+    background: #102840;
     cursor: not-allowed;
   }
 
-  .add-btn.full .btn-action { color: #aac; }
-  .add-btn.full .btn-avail  { color: #aac; }
-  .add-btn.full:hover { border-color: #dce6ef; background: var(--surface2); }
+  .add-btn.full .btn-action { color: #5a7a8a; }
+  .add-btn.full .btn-avail  { color: #4a6a7a; }
+  .add-btn.full:hover { border-color: #1a3a52; background: #102840; }
 
   /* ── CHIPS ── */
   .reservation-chip {
@@ -439,8 +439,9 @@
   .chip-edit:hover   { background: var(--accent-light); color: var(--accent); }
   .chip-delete:hover { background: var(--danger-light); color: var(--danger); }
 
-  .chip-info { color: var(--text-muted); font-size: 0.69rem; }
-  .chip-original { font-size: 0.65rem; color: #8ab; font-style: italic; margin-top: 2px; }
+  .chip-info { color: #9ecce8; font-size: 0.69rem; }
+  .chip-original { font-size: 0.65rem; color: #7ab8d0; font-style: italic; margin-top: 2px; }
+  .btn-orig { font-size: 0.68rem; color: #f0c060; margin-top: 4px; background: rgba(240,192,96,0.12); border-radius: 5px; padding: 2px 6px; }
 
   .chip-badge {
     display: inline-block; font-size: 0.6rem; font-weight: 700;
@@ -639,7 +640,7 @@
 
 <div class="container">
   <div class="legend">
-    <div class="legend-item"><div class="legend-dot dot-priority"></div> Voorrangsvak (ICT / Engels / Burgerschap)</div>
+    <div class="legend-item"><div class="legend-dot dot-priority"></div> Voorrangsvak (ICT / Engels / Burgerschap / JIJ-toets)</div>
     <div class="legend-item"><div class="legend-dot dot-normal"></div>   Normaal vak</div>
     <div class="legend-item"><div class="legend-dot dot-warn"></div>     Bijna vol (&gt;75%)</div>
     <div class="legend-item"><div class="legend-dot dot-danger"></div>   Vol</div>
@@ -697,6 +698,7 @@
           <option value="ICT">ICT</option>
           <option value="Engels">Engels</option>
           <option value="Burgerschap">Burgerschap</option>
+          <option value="JIJ-toets">JIJ-toets</option>
         </optgroup>
         <optgroup label="Overig">
           <option value="Nederlands">Nederlands</option>
@@ -766,7 +768,7 @@ const KARREN = [
   { id: 4, name: 'Laptopkar 5', laptops: 24 },
 ];
 
-const PRIORITY_VAKKEN = ['ICT','Engels','Burgerschap'];
+const PRIORITY_VAKKEN = ['ICT','Engels','Burgerschap','JIJ-toets'];
 
 // ══════════════════════════════════════════════════════════
 // STATE
@@ -1032,14 +1034,11 @@ function renderSummary() {
   el.innerHTML = '';
   DAYS_NL.forEach((d, di) => {
     const date = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
-    const avail = HOURS.reduce((s,_,hi) => s + getAvail(currentWeekIdx, di, hi, selectedKar), 0);
-    const total = KARREN[selectedKar].laptops * HOURS.length;
     const card  = document.createElement('div');
     card.className = 'summary-card';
     card.innerHTML = `
       <div class="sc-day">${d}</div>
-      <div class="sc-date">${fmtDate(date)}</div>
-      <div class="sc-laptops">${avail} / ${total} vrij 💻</div>`;
+      <div class="sc-date">${fmtDate(date)}</div>`;
     el.appendChild(card);
   });
 }
@@ -1105,19 +1104,27 @@ function renderTable() {
       });
 
       // + Reserveren knop
+      // Zoek gewijzigde reservering voor deze kar om origineel te tonen
+      const editedRes = getRes(currentWeekIdx, di, hi).find(r => r.kar === selectedKar && r.editedBy);
+      const origInfo  = editedRes
+        ? `<div class="btn-orig">Origineel: <strong>${editedRes.originalName}</strong> · ${editedRes.lokaal || ''} · ${editedRes.laptops}💻</div>`
+        : '';
+
       const btn = document.createElement('button');
       if (avail <= 0) {
         btn.className = 'add-btn full';
         btn.innerHTML = `
           <div class="btn-action">🔒 Vol</div>
-          <div class="btn-avail">0 van ${kar.laptops} laptops vrij</div>`;
+          <div class="btn-avail">0 van ${kar.laptops} laptops vrij</div>
+          ${origInfo}`;
         btn.disabled = true;
       } else {
         btn.className = 'add-btn';
-        const fillColor = pct < 0.75 ? '#1b5e20' : pct < 1 ? '#e65100' : '#b71c1c';
+        const fillColor = pct < 0.75 ? '#4fc3a1' : pct < 1 ? '#ffb74d' : '#ef9a9a';
         btn.innerHTML = `
           <div class="btn-action">＋ Reserveren</div>
-          <div class="btn-avail" style="color:${fillColor};font-weight:800">${avail} van ${kar.laptops} laptops vrij</div>`;
+          <div class="btn-avail" style="color:${fillColor};font-weight:800">${avail} van ${kar.laptops} laptops vrij</div>
+          ${origInfo}`;
         btn.onclick = () => openModal(di, hi, avail);
       }
       td.appendChild(btn);
