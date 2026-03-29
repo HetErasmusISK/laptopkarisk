@@ -18,8 +18,8 @@
     --accent2:       #1976d2;
     --accent-light:  #cce4f7;
     --accent-xlight: #e4f2fb;
-    --priority:      #c62828;
-    --priority-light:#ffebee;
+    --priority:      #7b1fa2;
+    --priority-light:#f3e5f5;
     --warn:          #e65100;
     --warn-light:    #fff3e0;
     --danger:        #b71c1c;
@@ -424,7 +424,7 @@
   }
 
   .chip-normal   { background: var(--accent-light);   border-left: 3px solid var(--accent); }
-  .chip-priority { background: #c62828; border-left: 3px solid #8e0000; color: white; }
+  .chip-priority { background: var(--priority-light); border-left: 3px solid var(--priority); }
 
   .chip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
 
@@ -444,11 +444,6 @@
   .chip-delete:hover { background: var(--danger-light); color: var(--danger); }
 
   .chip-info { color: #2a6090; font-size: 0.69rem; }
-  .chip-priority .chip-info { color: rgba(255,255,255,0.85); }
-  .chip-priority .chip-name { color: white; }
-  .chip-priority .chip-original { color: rgba(255,255,255,0.7); }
-  .chip-priority .chip-edit { color: rgba(255,255,255,0.8); }
-  .chip-priority .chip-delete { color: rgba(255,255,255,0.8); }
   .chip-original { font-size: 0.65rem; color: #3a7aaa; font-style: italic; margin-top: 2px; }
   .btn-orig { font-size: 0.68rem; color: #f0c060; margin-top: 4px; background: rgba(240,192,96,0.12); border-radius: 5px; padding: 2px 6px; }
 
@@ -457,7 +452,7 @@
     padding: 1px 5px; border-radius: 3px; margin-right: 2px;
   }
 
-  .badge-priority { background: var(--priority); color: white; }
+  .badge-priority { background: #c62828; color: white; font-weight: 800; }
   .badge-weeks    { background: var(--accent);   color: white; }
   .badge-kar      { background: #2979ff;          color: white; }
 
@@ -530,8 +525,8 @@
   .avail-box .avail-label { font-weight: 600; }
 
   .priority-note {
-    font-size: 0.74rem; color: #b71c1c;
-    background: #ffebee;
+    font-size: 0.74rem; color: var(--priority);
+    background: var(--priority-light);
     border-radius: 7px; padding: 6px 10px;
     margin-bottom: 14px; display: none;
   }
