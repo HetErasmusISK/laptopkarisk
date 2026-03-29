@@ -1415,22 +1415,101 @@ async function confirmReservation() {
 
 function confirmDelete(wi, di, hi, ri) {
   const res = getRes(wi, di, hi)[ri];
-  if (!confirm(`Reservering van ${res.name} (${res.vak}, ${res.laptops} laptops) verwijderen?`)) return;
-  deleteRes(wi, di, hi, ri);
+  const weeks = res.weeks || 1;
+  const name  = res.name || '?';
+
+  document.getElementById('deleteModalSub').textContent =
+    `${name} · ${res.vak} · ${res.laptops} laptops · ${DAYS_NL[di]} ${HOURS[hi].label}`;
+  document.getElementById('deleteWeeksInfo').textContent  = `${weeks} week${weeks > 1 ? 'en' : ''}`;
+  document.getElementById('deleteWeeksCount').textContent = weeks;
+
+  // Knop: alleen deze week
+  document.getElementById('deleteOneBtn').onclick = async () => {
+    closeDeleteModal();
+    await deleteRes(wi, di, hi, ri, false);
+  };
+
+  // Knop: alle weken — zoek alle weken met dezelfde reservering (zelfde naam+vak+di+hi+kar)
+  document.getElementById('deleteAllBtn').onclick = async () => {
+    closeDeleteModal();
+    await deleteRes(wi, di, hi, ri, true);
+  };
+
+  // Verberg "alle weken" knop als er maar 1 week is
+  document.getElementById('deleteAllBtn').style.display = weeks > 1 ? '' : 'none';
+
+  document.getElementById('deleteModalOverlay').classList.add('open');
 }
 
-async function deleteRes(wi, di, hi, ri) {
-  const k = cellKey(wi, di, hi);
-  if (db[k]) {
-    db[k].splice(ri, 1);
-    await saveToBin();
-    renderAll();
+function closeDeleteModal() {
+  document.getElementById('deleteModalOverlay').classList.remove('open');
+}
+
+async function deleteRes(wi, di, hi, ri, allWeeks) {
+  const res = getRes(wi, di, hi)[ri];
+
+  if (allWeeks && res.weeks > 1) {
+    // Verwijder in alle weken: zelfde dag, uur, kar, naam, vak
+    for (let w = 0; w < res.weeks; w++) {
+      const targetWi = wi - w; // zoek ook terug (kan al in eerdere weken staan)
+      // Zoek vooruit vanaf de eerste week van de reservering
+    }
+    // Strategie: doorzoek alle weken en verwijder matches op naam+vak+di+hi+kar
+    const matchName = res.name;
+    const matchVak  = res.vak;
+    const matchKar  = res.kar;
+    Object.keys(db).forEach(key => {
+      const match = key.match(/^w(\d+)_d(\d+)_h(\d+)$/);
+      if (!match) return;
+      const kdi = parseInt(match[2]);
+      const khi = parseInt(match[3]);
+      if (kdi !== di || khi !== hi) return;
+      db[key] = db[key].filter(r =>
+        !(r.name === matchName && r.vak === matchVak && r.kar === matchKar)
+      );
+    });
+  } else {
+    // Alleen deze week
+    const k = cellKey(wi, di, hi);
+    if (db[k]) db[k].splice(ri, 1);
   }
+
+  await saveToBin();
+  renderAll();
 }
 
 document.getElementById('modalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
 });
+
+document.getElementById('deleteModalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('deleteModalOverlay')) closeDeleteModal();
+});
 </script>
+
+<!-- VERWIJDER MODAL -->
+<div class="modal-overlay" id="deleteModalOverlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title" style="color:#b71c1c">🗑 Reservering verwijderen</div>
+    <div class="modal-sub" id="deleteModalSub"></div>
+    <div style="background:#fff3e0;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:0.82rem;color:#7a3a00;">
+      <strong>Let op:</strong> deze reservering is ingesteld voor
+      <strong id="deleteWeeksInfo">1 week</strong>.
+      Wil je alleen deze week verwijderen, of alle herhalingen?
+    </div>
+    <div class="modal-actions" style="flex-direction:column;gap:8px">
+      <button class="btn btn-secondary" id="deleteOneBtn" style="background:#fff8f8;border-color:#ffcdd2;color:#b71c1c;font-size:0.85rem">
+        🗓 Alleen deze week verwijderen
+      </button>
+      <button class="btn btn-secondary" id="deleteAllBtn" style="background:#ffebee;border-color:#ef9a9a;color:#7f0000;font-size:0.85rem">
+        🗑 Alle weken verwijderen (×<span id="deleteWeeksCount">1</span>)
+      </button>
+      <button class="btn btn-secondary" onclick="closeDeleteModal()" style="margin-top:4px">
+        Annuleren
+      </button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
