@@ -811,10 +811,6 @@ document.getElementById('pwInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLogin();
 });
 
-// Automatisch inloggen als eerder al ingelogd
-if (localStorage.getItem(AUTH_KEY) === 'true') {
-  showApp();
-}
 
 // ══════════════════════════════════════════════════════════
 // DATUM HELPERS
@@ -1485,6 +1481,11 @@ document.getElementById('modalOverlay').addEventListener('click', e => {
 document.getElementById('deleteModalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('deleteModalOverlay')) closeDeleteModal();
 });
+
+// Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
+if (localStorage.getItem(AUTH_KEY) === 'true') {
+  showApp();
+}
 </script>
 
 <!-- VERWIJDER MODAL -->
