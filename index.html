@@ -784,12 +784,19 @@ let ALL_WEEKS     = [];
 // ══════════════════════════════════════════════════════════
 // LOGIN
 // ══════════════════════════════════════════════════════════
+const AUTH_KEY = 'laptopRoosterAuth';
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initApp();
+}
+
 function doLogin() {
   const val = document.getElementById('pwInput').value;
   if (val === PASSWORD) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    initApp();
+    localStorage.setItem(AUTH_KEY, 'true');
+    showApp();
   } else {
     const inp = document.getElementById('pwInput');
     document.getElementById('loginErr').textContent = 'Onjuist wachtwoord, probeer opnieuw.';
@@ -803,6 +810,11 @@ function doLogin() {
 document.getElementById('pwInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLogin();
 });
+
+// Automatisch inloggen als eerder al ingelogd
+if (localStorage.getItem(AUTH_KEY) === 'true') {
+  showApp();
+}
 
 // ══════════════════════════════════════════════════════════
 // DATUM HELPERS
@@ -845,8 +857,25 @@ function buildWeeks() {
     ALL_WEEKS.push({ index: idx++, monday: new Date(cur) });
     cur = addDays(cur, 7);
   }
-  const ti = ALL_WEEKS.findIndex(w => weekContainsToday(ALL_WEEKS.indexOf(w)));
-  currentWeekIdx = ti >= 0 ? ti : 0;
+
+  // In het weekend (za=6, zo=0) → open de volgende week
+  const dayOfWeek = TODAY.getDay();
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+  if (isWeekend) {
+    // Bereken de eerstvolgende maandag
+    const daysUntilMonday = dayOfWeek === 6 ? 2 : 1;
+    const nextMonday = addDays(TODAY, daysUntilMonday);
+    const ti = ALL_WEEKS.findIndex(w => {
+      const fri = addDays(w.monday, 4);
+      return w.monday <= nextMonday && nextMonday <= fri;
+    });
+    currentWeekIdx = ti >= 0 ? ti : 0;
+  } else {
+    // Doordeweeks → huidige week
+    const ti = ALL_WEEKS.findIndex(w => weekContainsToday(ALL_WEEKS.indexOf(w)));
+    currentWeekIdx = ti >= 0 ? ti : 0;
+  }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1164,8 +1193,12 @@ function renderTable() {
         : '';
 
       const btn = document.createElement('button');
+      // Knop krijgt dezelfde achtergrondkleur als het lesuur
+      const btnBg     = h.bg;
+      const btnBorder = h.labelBg;
       if (avail <= 0) {
         btn.className = 'add-btn full';
+        btn.style.cssText = `background:${btnBg};border-color:${btnBorder};opacity:0.7`;
         btn.innerHTML = `
           <div class="btn-action">🔒 Vol</div>
           <div class="btn-avail">0 van ${kar.laptops} laptops vrij</div>
@@ -1173,7 +1206,8 @@ function renderTable() {
         btn.disabled = true;
       } else {
         btn.className = 'add-btn';
-        const fillColor = pct < 0.75 ? '#4fc3a1' : pct < 1 ? '#ffb74d' : '#ef9a9a';
+        btn.style.cssText = `background:${btnBg};border-color:${btnBorder}`;
+        const fillColor = pct < 0.75 ? '#1b6e4a' : pct < 1 ? '#a05000' : '#9b1c1c';
         btn.innerHTML = `
           <div class="btn-action">＋ Reserveren</div>
           <div class="btn-avail" style="color:${fillColor};font-weight:800">${avail} van ${kar.laptops} laptops vrij</div>
