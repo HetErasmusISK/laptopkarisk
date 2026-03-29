@@ -210,14 +210,17 @@
   }
 
   .week-pill.has-today {
-    border-color: var(--accent2);
-    color: var(--accent);
-    background: var(--accent-light);
+    border-color: #e65100;
+    color: #b34100;
+    background: #ffe0b2;
+    font-weight: 700;
   }
 
   .week-pill.has-today.active {
-    background: var(--accent);
+    background: #e65100;
+    border-color: #bf360c;
     color: white;
+    font-weight: 800;
   }
 
   /* ── KAR BAR ── */
@@ -646,8 +649,6 @@
     <div class="legend-item"><div class="legend-dot dot-danger"></div>   Vol</div>
   </div>
 
-  <!-- DAG SAMENVATTING -->
-  <div class="day-summary" id="daySummary"></div>
 
   <!-- ROOSTER -->
   <div class="grid-wrapper">
@@ -838,10 +839,19 @@ function isToday(date) {
          date.getDate()     === TODAY.getDate();
 }
 
+function getTargetMonday() {
+  // In het weekend → volgende maandag; anders → maandag van deze week
+  const day = TODAY.getDay();
+  if (day === 6) return addDays(TODAY, 2);  // zaterdag → +2
+  if (day === 0) return addDays(TODAY, 1);  // zondag   → +1
+  return getMondayOf(TODAY);
+}
+
 function weekContainsToday(wi) {
+  const target = getTargetMonday();
   const mon = ALL_WEEKS[wi].monday;
   const fri = addDays(mon, 4);
-  return mon <= TODAY && TODAY <= fri;
+  return mon <= target && target <= fri;
 }
 
 function buildWeeks() {
@@ -1071,26 +1081,9 @@ function renderKarBar() {
   KARREN.forEach(kar => {
     // Beschikbare laptops voor deze kar op het huidige lesuur van vandaag
     // (som over alle uren als het niet vandaag is in deze week)
-    let availLabel = '';
-    const todayDi = DAYS_NL.findIndex((_, di) => isToday(addDays(ALL_WEEKS[currentWeekIdx].monday, di)));
-
-    if (todayDi >= 0) {
-      // Vandaag zit in deze week – toon per uur
-      const perHour = HOURS.map((_, hi) => getAvail(currentWeekIdx, todayDi, hi, kar.id));
-      const minAvail = Math.min(...perHour);
-      availLabel = minAvail <= 0 ? 'vol' : `${minAvail}–${Math.max(...perHour)} vrij vandaag`;
-    } else {
-      // Andere week: toon totale beschikbaarheid (alle uren × alle dagen)
-      let totalAvail = 0;
-      for (let di=0; di<5; di++)
-        for (let hi=0; hi<5; hi++)
-          totalAvail += getAvail(currentWeekIdx, di, hi, kar.id);
-      availLabel = `${totalAvail} vrij (week)`;
-    }
-
     const btn = document.createElement('button');
     btn.className = 'kar-btn' + (selectedKar === kar.id ? ' active' : '');
-    btn.innerHTML = `<span class="kar-name">${kar.name}</span><span class="kar-avail">${kar.laptops} laptops · ${availLabel}</span>`;
+    btn.innerHTML = `<span class="kar-name">${kar.name}</span>`;
     btn.onclick = () => { selectedKar = kar.id; renderAll(); };
     wrap.appendChild(btn);
   });
@@ -1102,22 +1095,7 @@ function renderKarBar() {
 function renderAll() {
   updateWeekPills();
   renderKarBar();
-  renderSummary();
   renderTable();
-}
-
-function renderSummary() {
-  const el = document.getElementById('daySummary');
-  el.innerHTML = '';
-  DAYS_NL.forEach((d, di) => {
-    const date = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
-    const card  = document.createElement('div');
-    card.className = 'summary-card';
-    card.innerHTML = `
-      <div class="sc-day">${d}</div>
-      <div class="sc-date">${fmtDate(date)}</div>`;
-    el.appendChild(card);
-  });
 }
 
 function renderTable() {
