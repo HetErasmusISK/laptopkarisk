@@ -592,7 +592,7 @@
   .btn-secondary { background: var(--surface2); color: var(--text-muted); border: 2px solid var(--border); }
   .btn-secondary:hover { background: var(--border); }
 
-  tbody tr { border-top: 2px solid #4a90c0; }
+  tbody tr { border-top: 2px solid #2a6090; }
   tbody tr:first-child { border-top: none; }
   tr:last-child td { border-bottom: none; }
 
@@ -614,11 +614,7 @@
   </div>
 </div>
 
-<!-- LOADING -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <div class="loading-text" id="loadingText">Laden…</div>
-</div>
+<!-- loading vervangen door achtergrond sync -->
 
 <!-- APP (verborgen tot login) -->
 <div id="app" style="display:none">
@@ -627,6 +623,7 @@
   <div>
     <h1>💻 Laptop Reservering ISK Almelo</h1>
     <div class="subtitle">5 laptopkarren · 24 laptops per kar</div>
+    <div id="syncStatus" style="display:none;font-size:0.75rem;padding:3px 10px;border-radius:6px;margin-top:4px;font-weight:600;color:#1a4a7a;"></div>
   </div>
 </header>
 
@@ -682,7 +679,9 @@
     <div class="field">
       <label>Naam docent (3 letters)</label>
       <input type="text" id="fName" maxlength="3" placeholder="bijv. JAN" autocomplete="off"
+        oninput="onNameInput(this)"
         style="text-transform:uppercase;font-family:'Nunito Sans',sans-serif;letter-spacing:0.12em;font-size:1.05rem;font-weight:700;">
+      <div id="teacherHint" style="display:none;font-size:0.72rem;margin-top:4px;color:#1565c0;background:#e3f2fd;border-radius:6px;padding:4px 8px;">💡 Gegevens van vorige keer ingevuld</div>
       <div class="error-msg" id="errName">Vul precies 3 letters in (geen cijfers of tekens).</div>
     </div>
 
@@ -756,11 +755,11 @@ const SHORT_MONTHS   = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','o
 const FULL_MONTHS    = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
 
 const HOURS = [
-  { label: '1e uur', time: '08:30–09:20' },
-  { label: '2e uur', time: '09:20–10:10' },
-  { label: '3e uur', time: '10:30–11:20' },
-  { label: '4e uur', time: '11:20–12:10' },
-  { label: '5e uur', time: '13:00–13:50' },
+  { label: '1e uur', time: '08:30–09:20', bg: '#e8f4fd', labelBg: '#bbdefb' },
+  { label: '2e uur', time: '09:20–10:10', bg: '#f3e8fd', labelBg: '#e1bee7' },
+  { label: '3e uur', time: '10:30–11:20', bg: '#e8fdf4', labelBg: '#b2dfdb' },
+  { label: '4e uur', time: '11:20–12:10', bg: '#fdf6e8', labelBg: '#ffe0b2' },
+  { label: '5e uur', time: '13:00–13:50', bg: '#fde8ee', labelBg: '#ffcdd2' },
 ];
 
 const KARREN = [
@@ -853,32 +852,83 @@ function buildWeeks() {
 // ══════════════════════════════════════════════════════════
 // JSONBIN OPSLAG
 // ══════════════════════════════════════════════════════════
-function showLoading(msg) {
-  document.getElementById('loadingText').textContent = msg || 'Laden…';
-  document.getElementById('loadingOverlay').classList.add('show');
+const CACHE_KEY      = 'laptopRoosterCache';
+const TEACHER_KEY    = 'laptopDocenten';
+
+function saveTeacherProfile(name, lokaal, vak, laptops) {
+  try {
+    const all = JSON.parse(localStorage.getItem(TEACHER_KEY) || '{}');
+    all[name] = { lokaal, vak, laptops };
+    localStorage.setItem(TEACHER_KEY, JSON.stringify(all));
+  } catch(e) {}
 }
 
-function hideLoading() {
-  document.getElementById('loadingOverlay').classList.remove('show');
+function loadTeacherProfile(name) {
+  try {
+    const all = JSON.parse(localStorage.getItem(TEACHER_KEY) || '{}');
+    return all[name] || null;
+  } catch(e) { return null; }
+}
+
+function getKnownTeachers() {
+  try {
+    return Object.keys(JSON.parse(localStorage.getItem(TEACHER_KEY) || '{}'));
+  } catch(e) { return []; }
+}
+
+function showSyncStatus(msg, color) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.background = color || 'rgba(21,101,192,0.12)';
+  el.style.display = 'inline-block';
+  if (color === 'green') setTimeout(() => { el.style.display = 'none'; }, 2500);
+}
+
+function saveCache() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(db)); } catch(e) {}
+}
+
+function loadCache() {
+  try {
+    const c = localStorage.getItem(CACHE_KEY);
+    return c ? JSON.parse(c) : null;
+  } catch(e) { return null; }
 }
 
 async function loadFromBin() {
-  showLoading('Reserveringen laden…');
+  // Stap 1: laad cache direct → rooster meteen zichtbaar
+  const cached = loadCache();
+  if (cached) {
+    db = cached;
+    renderMonthNav();
+    renderAll();
+    showSyncStatus('⟳ Synchroniseren…');
+  } else {
+    showSyncStatus('⟳ Eerste keer laden…');
+  }
+
+  // Stap 2: haal verse data op de achtergrond
   try {
     const r = await fetch(JSONBIN_URL + '/latest', {
       headers: { 'X-Master-Key': API_KEY }
     });
     const json = await r.json();
-    db = json.record || {};
+    const fresh = json.record || {};
+    db = fresh;
+    saveCache();
+    renderAll();
+    showSyncStatus('✓ Bijgewerkt', 'rgba(27,94,32,0.15)');
   } catch(e) {
-    console.warn('Laden mislukt, lege database.', e);
-    db = {};
+    console.warn('Sync mislukt, cache wordt gebruikt.', e);
+    showSyncStatus('⚠ Offline – cache', 'rgba(183,28,28,0.12)');
+    if (!cached) db = {};
   }
-  hideLoading();
 }
 
 async function saveToBin() {
-  showLoading('Opslaan…');
+  saveCache(); // meteen lokaal opslaan
+  showSyncStatus('⟳ Opslaan…');
   try {
     await fetch(JSONBIN_URL, {
       method: 'PUT',
@@ -888,11 +938,12 @@ async function saveToBin() {
       },
       body: JSON.stringify(db)
     });
+    showSyncStatus('✓ Opgeslagen', 'rgba(27,94,32,0.15)');
   } catch(e) {
     console.warn('Opslaan mislukt.', e);
+    showSyncStatus('⚠ Opslaan mislukt', 'rgba(183,28,28,0.12)');
     alert('Opslaan mislukt. Controleer je internetverbinding.');
   }
-  hideLoading();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -917,9 +968,7 @@ function getAvail(wi, di, hi, karId) {
 // ══════════════════════════════════════════════════════════
 async function initApp() {
   buildWeeks();
-  await loadFromBin();
-  renderMonthNav();
-  renderAll();
+  await loadFromBin(); // rendert zelf zodra cache beschikbaar is
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1066,6 +1115,7 @@ function renderTable() {
 
     const hourTd = document.createElement('td');
     hourTd.className = 'hour-label';
+    hourTd.style.background = h.labelBg;
     hourTd.innerHTML = `${h.label}<span>${h.time}</span>`;
     tr.appendChild(hourTd);
 
@@ -1141,6 +1191,26 @@ function renderTable() {
 // ══════════════════════════════════════════════════════════
 // MODAL – NIEUW
 // ══════════════════════════════════════════════════════════
+function onNameInput(el) {
+  const val = el.value.toUpperCase();
+  el.value  = val;
+  if (val.length === 3 && /^[A-Z]{3}$/.test(val)) {
+    const profile = loadTeacherProfile(val);
+    if (profile) {
+      const avail = parseInt(document.getElementById('fLaptops').max);
+      document.getElementById('fLokaal').value  = profile.lokaal || '';
+      document.getElementById('fVak').value     = profile.vak    || '';
+      document.getElementById('fLaptops').value = Math.min(profile.laptops || 12, avail);
+      document.getElementById('teacherHint').style.display = 'block';
+      onVakChange(); // update prioriteitsnoot
+    } else {
+      document.getElementById('teacherHint').style.display = 'none';
+    }
+  } else {
+    document.getElementById('teacherHint').style.display = 'none';
+  }
+}
+
 function openModal(di, hi, avail) {
   const date = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
   pending    = { wi: currentWeekIdx, di, hi, editIdx: null };
@@ -1157,6 +1227,7 @@ function openModal(di, hi, avail) {
   document.getElementById('fLokaal').value            = '';
   document.getElementById('fVak').value               = '';
   document.getElementById('fWeken').value             = '1';
+  document.getElementById('teacherHint').style.display = 'none';
   document.getElementById('wekenField').style.display = '';
   document.getElementById('editNoteBox').style.display      = 'none';
   document.getElementById('originalNoteBox').style.display  = 'none';
@@ -1301,6 +1372,8 @@ async function confirmReservation() {
     }
   }
 
+  // Onthoud leerkrachtprofiel voor volgende keer
+  if (editIdx === null) saveTeacherProfile(name, lokaal, vak, laptops);
   closeModal();
   await saveToBin();
   renderAll();
