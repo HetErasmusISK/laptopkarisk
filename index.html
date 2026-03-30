@@ -131,25 +131,36 @@
   header {
     background: linear-gradient(90deg, #0d47a1 0%, #1976d2 100%);
     color: white;
-    padding: 14px 28px;
+    padding: 8px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     box-shadow: 0 2px 12px rgba(13,71,161,0.35);
   }
 
   header h1 {
-    font-size: 1.25rem;
+    font-size: 1.05rem;
     font-weight: 800;
     letter-spacing: -0.01em;
   }
 
+  .periode-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    padding: 5px 14px;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+
   header .subtitle {
-    font-size: 0.76rem;
+    font-size: 0.72rem;
     opacity: 0.72;
-    margin-top: 1px;
+    margin-top: 0px;
   }
 
   /* ── MAAND/WEEK NAV ── */
@@ -423,8 +434,8 @@
     cursor: default;
   }
 
-  .chip-normal   { background: var(--accent-light);   border-left: 3px solid var(--accent); }
-  .chip-priority { background: var(--priority-light); border-left: 3px solid var(--priority); }
+  .chip-normal   { border-left: 3px solid var(--accent); }
+  .chip-priority { border-left: 3px solid var(--priority); }
 
   .chip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
 
@@ -628,6 +639,7 @@
     <div class="subtitle">5 laptopkarren · 24 laptops per kar</div>
     <div id="syncStatus" style="display:none;font-size:0.75rem;padding:3px 10px;border-radius:6px;margin-top:4px;font-weight:600;color:#1a4a7a;"></div>
   </div>
+  <div class="periode-label">Periode 4 · 2025–2026</div>
 </header>
 
 <!-- MAAND/WEEK NAVIGATIE -->
@@ -855,9 +867,10 @@ function weekContainsToday(wi) {
 }
 
 function buildWeeks() {
-  const RANGE_END = new Date(2026, 6, 31);
+  const RANGE_START = new Date(2025, 3, 6);  // 6 april 2025
+  const RANGE_END   = new Date(2026, 5, 26);  // 26 juni 2026
   ALL_WEEKS = [];
-  let cur = getMondayOf(addDays(TODAY, -35)); // 5 weken terug
+  let cur = getMondayOf(RANGE_START);
   let idx = 1;
   while (cur <= RANGE_END) {
     ALL_WEEKS.push({ index: idx++, monday: new Date(cur) });
@@ -1137,6 +1150,7 @@ function renderTable() {
         const isPrio = PRIORITY_VAKKEN.includes(r.vak);
         const chip   = document.createElement('div');
         chip.className = `reservation-chip ${isPrio ? 'chip-priority' : 'chip-normal'}`;
+        chip.style.background = h.bg;
 
         const origLine = r.editedBy
           ? `<div class="chip-original">✏️ gewijzigd door ${r.editedBy} (was: ${r.originalName || '?'})</div>`
