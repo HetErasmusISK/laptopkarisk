@@ -944,16 +944,16 @@ function buildWeeks() {
     cur = addDays(cur, 7);
   }
 
-  // Zoek de huidige of dichtstbijzijnde week
-  const ti = ALL_WEEKS.findIndex(w => weekContainsToday(ALL_WEEKS.indexOf(w)));
-  if (ti >= 0) {
-    currentWeekIdx = ti;
+  // Zoek de week die TODAY bevat (direct met index)
+  let foundIdx = -1;
+  for (let i = 0; i < ALL_WEEKS.length; i++) {
+    if (weekContainsToday(i)) { foundIdx = i; break; }
+  }
+  if (foundIdx >= 0) {
+    currentWeekIdx = foundIdx;
   } else {
-    // TODAY valt vóór de start van periode 4 → open bij eerste week (7 april 2025)
-    // TODAY valt ná het einde → open bij laatste week
-    const target = TODAY.getDay() === 6 ? addDays(TODAY, 2) :
-                   TODAY.getDay() === 0 ? addDays(TODAY, 1) : getMondayOf(TODAY);
-    currentWeekIdx = target < ALL_WEEKS[0].monday ? 0 : ALL_WEEKS.length - 1;
+    // Buiten de periode: open eerste week
+    currentWeekIdx = 0;
   }
 }
 
@@ -1553,12 +1553,13 @@ async function confirmReservation() {
 
 function confirmDelete(wi, di, hi, ri) {
   const res = getRes(wi, di, hi)[ri];
-  const weeks = res.weeks || 1;
+  const weeks = parseInt(res.weeks) || 1;
   const name  = res.name || '?';
 
   document.getElementById('deleteModalSub').textContent =
     `${name} · ${res.vak} · ${res.laptops} laptops · ${DAYS_NL[di]} ${HOURS[hi].label}`;
-  document.getElementById('deleteWeeksInfo').textContent  = `${weeks} week${weeks > 1 ? 'en' : ''}`;  // correct
+  const weeksNum = parseInt(weeks) || 1;
+  document.getElementById('deleteWeeksInfo').textContent  = `${weeksNum} week${weeksNum > 1 ? 'en' : ''}`;
   document.getElementById('deleteWeeksCount').textContent = weeks;
 
   // Knop: alleen deze week
