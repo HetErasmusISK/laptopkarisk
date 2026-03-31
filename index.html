@@ -1553,7 +1553,7 @@ function confirmDelete(wi, di, hi, ri) {
 
   document.getElementById('deleteModalSub').textContent =
     `${name} · ${res.vak} · ${res.laptops} laptops · ${DAYS_NL[di]} ${HOURS[hi].label}`;
-  document.getElementById('deleteWeeksInfo').textContent  = `${weeks} week${weeks > 1 ? 'en' : ''}`;
+  document.getElementById('deleteWeeksInfo').textContent  = `${weeks} week${weeks > 1 ? 'en' : ''}`;  // correct
   document.getElementById('deleteWeeksCount').textContent = weeks;
 
   // Knop: alleen deze week
@@ -1582,21 +1582,14 @@ async function deleteRes(wi, di, hi, ri, allWeeks) {
   const res = getRes(wi, di, hi)[ri];
 
   if (allWeeks && res.weeks > 1) {
-    // Verwijder in alle weken: zelfde dag, uur, kar, naam, vak
-    for (let w = 0; w < res.weeks; w++) {
-      const targetWi = wi - w; // zoek ook terug (kan al in eerdere weken staan)
-      // Zoek vooruit vanaf de eerste week van de reservering
-    }
-    // Strategie: doorzoek alle weken en verwijder matches op naam+vak+di+hi+kar
+    // Verwijder in alle weken: doorzoek alle sleutels op dag+uur+kar+naam+vak
+    // Sleutels zijn nu datumgebaseerd: "2025-04-07_d0_h0"
     const matchName = res.name;
     const matchVak  = res.vak;
     const matchKar  = res.kar;
+    const suffix    = `_d${di}_h${hi}`;
     Object.keys(db).forEach(key => {
-      const match = key.match(/^w(\d+)_d(\d+)_h(\d+)$/);
-      if (!match) return;
-      const kdi = parseInt(match[2]);
-      const khi = parseInt(match[3]);
-      if (kdi !== di || khi !== hi) return;
+      if (!key.endsWith(suffix)) return;
       db[key] = db[key].filter(r =>
         !(r.name === matchName && r.vak === matchVak && r.kar === matchKar)
       );
