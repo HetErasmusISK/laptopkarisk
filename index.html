@@ -248,14 +248,27 @@
   }
 
   .free-day-cell {
-    background: #f5f5f5 !important;
-    opacity: 0.5;
-    pointer-events: none;
+    background: #f0f0f0 !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+    user-select: none;
+  }
+
+  .vacation-cell {
+    background: #c8e6c9 !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+    user-select: none;
   }
 
   .free-day-header {
-    background: #eeeeee !important;
+    background: #e0e0e0 !important;
     color: #9e9e9e !important;
+  }
+
+  .vacation-header {
+    background: #a5d6a7 !important;
+    color: #1b5e20 !important;
   }
 
   /* ── KAR BAR ── */
@@ -814,25 +827,20 @@ const PRIORITY_VAKKEN = ['ICT','Engels','Burgerschap','JIJ-toets'];
 
 // Vakantieweken: maandag van de vakantieweek (worden groen getoond, reserveringen doorgeschoven)
 const VACATION_MONDAYS = [
-  '2025-04-21',  // meivakantie week 1 (21–25 apr)
-  '2025-04-28',  // meivakantie week 2 (28 apr–2 mei)
-  '2025-07-07',  // zomervakantie week 1
-  '2025-07-14',  // zomervakantie week 2
-  '2025-07-21',  // zomervakantie week 3
-  '2025-07-28',  // zomervakantie week 4
-  '2025-08-04',  // zomervakantie week 5
-  '2025-08-11',  // zomervakantie week 6 (t/m 15 aug; 18 aug = eerste schoolweek)
+  '2026-04-20',  // meivakantie 2026 week 1 (20–24 apr)
+  '2026-04-27',  // meivakantie 2026 week 2 (27 apr–1 mei)
 ];
 
 // Vrije dagen (individuele data): blanco tonen, geen doorschuiven
 const FREE_DAYS = [
-  '2025-04-06',  // 6 april (2e Paasdag)
-  '2025-05-04',  // 4 mei
-  '2025-05-05',  // 5 mei (Bevrijdingsdag)
-  '2025-05-14',  // 14 mei (Hemelvaartsdag)
-  '2025-05-15',  // 15 mei
-  '2025-05-25',  // 25 mei (Pinksteren)
-  '2025-05-28',  // 28 mei
+  '2026-04-06',  // 6 april (2e Paasdag)
+  '2026-05-04',  // 4 mei
+  '2026-05-05',  // 5 mei (Bevrijdingsdag)
+  '2026-05-14',  // 14 mei (Hemelvaartsdag)
+  '2026-05-15',  // 15 mei
+  '2026-05-25',  // 25 mei (Pinksteren)
+  '2026-05-28',  // 28 mei
+  '2026-06-18',  // 18 juni
 ];
 
 function dateToStr(date) {
@@ -936,10 +944,9 @@ function weekContainsToday(wi) {
 
 function buildWeeks() {
   ALL_WEEKS = [];
-  // Vaste start: maandag 7 april 2025 (week 15, periode 4)
-  // Vaste einde: vrijdag 26 juni 2026
-  const START = new Date(2025, 3, 7);  START.setHours(0,0,0,0);
-  const END   = new Date(2026, 5, 23); END.setHours(23,59,59,0); // maandag 23 juni 2026 (week t/m 25 jun)
+  // Periode 4: week van 6 april 2026 t/m 25 juni 2026
+  const START = new Date(2026, 3, 6);  START.setHours(0,0,0,0); // maandag 6 april 2026
+  const END   = new Date(2026, 5, 23); END.setHours(23,59,59,0); // maandag 23 juni 2026
   let cur = new Date(START);
   let idx = 1;
   while (cur <= END) {
@@ -1144,67 +1151,78 @@ function renderMonthNav() {
   const PERIOD_START = new Date(2025, 3, 1); // 1 april 2025
   const groups = new Map();
   ALL_WEEKS.forEach((w, wi) => {
-    const y = w.monday.getFullYear();
-    const m = w.monday.getMonth();
-    // Periode 4: 7 april 2025 t/m 25 juni 2026
-    if (y < 2025) return;
-    if (y === 2025 && m < 3) return;   // vóór april 2025
-    if (y === 2026 && m > 5) return;   // na juni 2026
-    if (y > 2026) return;
+    // Filter: alleen april 2026 t/m juni 2026
+    const my = w.monday.getFullYear();
+    const mm = w.monday.getMonth();
+    if (my !== 2026) return;             // alleen 2026
+    if (mm < 3) return;                  // vóór april 2026
+    if (mm > 5) return;                  // na juni 2026
+    // Groepeer op VRIJDAG (voor correcte maandweergave)
+    const fri = addDays(w.monday, 4);
+    const y = fri.getFullYear();
+    const m = fri.getMonth();
     const key = `${y}-${String(m).padStart(2,'0')}`;
     if (!groups.has(key)) groups.set(key, { year: y, month: m, weeks: [] });
     groups.get(key).weeks.push(wi);
   });
 
-  // Bepaal de actieve maand
-  const activeWeek   = ALL_WEEKS[currentWeekIdx];
-  const activeMon    = activeWeek ? activeWeek.monday : null;
-  const activeKey    = activeMon
-    ? `${activeMon.getFullYear()}-${String(activeMon.getMonth()).padStart(2,'0')}`
-    : null;
+  // Sorteer: actieve maand eerst, daarna rest chronologisch
+  const allNavKeys   = Array.from(groups.keys()).sort();
+  const activeFri    = ALL_WEEKS[currentWeekIdx] ? addDays(ALL_WEEKS[currentWeekIdx].monday, 4) : null;
+  const activeNavKey = activeFri ? `${activeFri.getFullYear()}-${String(activeFri.getMonth()).padStart(2,'0')}` : null;
+  const activeNavPos = activeNavKey ? allNavKeys.indexOf(activeNavKey) : -1;
+  const orderedNavKeys = activeNavPos >= 0
+    ? [...allNavKeys.slice(activeNavPos), ...allNavKeys.slice(0, activeNavPos)]
+    : allNavKeys;
 
-  // Sorteer: actieve maand eerst, daarna chronologisch verder
-  const allKeys    = Array.from(groups.keys()).sort();
-  const activePos  = activeKey ? allKeys.indexOf(activeKey) : 0;
-  // Render: begin bij de actieve maand, dan de rest
-  const orderedKeys = activePos >= 0
-    ? [...allKeys.slice(activePos), ...allKeys.slice(0, activePos)]
-    : allKeys;
-
-  function buildPill(wi) {
-    const w   = ALL_WEEKS[wi];
-    const mon = w.monday;
-    const fri = addDays(mon, 4);
-    const isThisWeek = weekContainsToday(wi);
-    const isVac      = isVacationWeek(wi);
-    const btn = document.createElement('button');
-    btn.id        = `wpill-${wi}`;
-    btn.className = 'week-pill' +
-      (wi === currentWeekIdx ? ' active'    : '') +
-      (isThisWeek && !isVac ? ' has-today'  : '') +
-      (isVac                ? ' vacation'   : '');
-    const vacLabel = isVac
-      ? '<br><span style="font-size:0.65rem;font-weight:700">🌴 vakantie</span>'
-      : '';
-    btn.innerHTML = `${fmtDate(mon)}<br><span style="opacity:.7">${fmtDate(fri)}</span>${vacLabel}`;
-    btn.onclick = () => { currentWeekIdx = wi; updateWeekPills(); renderAll(); };
-    return btn;
-  }
-
-  orderedKeys.forEach(key => {
+  orderedNavKeys.forEach(key => {
     const g   = groups.get(key);
     const div = document.createElement('div');
     div.className = 'month-group';
+
     const lbl = document.createElement('div');
     lbl.className = 'month-label';
     lbl.textContent = `${FULL_MONTHS[g.month]} ${g.year}`;
     div.appendChild(lbl);
+
     const pills = document.createElement('div');
     pills.className = 'week-pills';
-    g.weeks.forEach(wi => pills.appendChild(buildPill(wi)));
+
+    g.weeks.forEach(wi => {
+      const w   = ALL_WEEKS[wi];
+      const mon = w.monday;
+      const fri = addDays(mon, 4);
+      const isThisWeek = weekContainsToday(wi);
+      const isVac      = isVacationWeek(wi);
+      const btn = document.createElement('button');
+      btn.id        = `wpill-${wi}`;
+      btn.className = 'week-pill' +
+        (wi === currentWeekIdx ? ' active'   : '') +
+        (isThisWeek && !isVac ? ' has-today' : '') +
+        (isVac                ? ' vacation'  : '');
+      const vacLabel = isVac
+        ? '<br><span style="font-size:0.65rem;font-weight:700">🌴 vakantie</span>'
+        : '';
+      btn.innerHTML = `${fmtDate(mon)}<br><span style="opacity:.7">${fmtDate(fri)}</span>${vacLabel}`;
+      btn.onclick = () => { currentWeekIdx = wi; updateWeekPills(); renderAll(); };
+      pills.appendChild(btn);
+    });
+
     div.appendChild(pills);
     row.appendChild(div);
   });
+
+  // Geen scroll nodig - actieve maand staat al vooraan
+  // Scroll naar actieve weekpil via offsetLeft (werkt bij file://)
+  setTimeout(() => {
+    const nav = document.querySelector('.month-nav');
+    const el  = document.getElementById('wpill-' + currentWeekIdx);
+    if (nav && el) {
+      let pos = 0, node = el;
+      while (node && node !== nav) { pos += node.offsetLeft; node = node.offsetParent; }
+      nav.scrollLeft = Math.max(0, pos - 40);
+    }
+  }, 0);
 }
 
 function updateWeekPills() {
@@ -1251,11 +1269,18 @@ function renderTable() {
   // Header
   const headRow = document.getElementById('headRow');
   headRow.innerHTML = '<th>Lesuur</th>';
+  const vacWeekHeader = isVacationWeek(currentWeekIdx);
   DAYS_NL.forEach((d, di) => {
-    const date = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
-    const cls  = isToday(date) ? ' today-header' : (isFreeDay(date) ? ' free-day-header' : '');
-    const freeLbl = isFreeDay(date) ? '<span class="th-date" style="color:#bbb">vrije dag</span>' : `<span class="th-date">${fmtDate(date)}</span>`;
-    headRow.innerHTML += `<th class="${cls}">${d}${freeLbl}</th>`;
+    const date    = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
+    const isVacD  = vacWeekHeader;
+    const isFreeD = isFreeDay(date);
+    const cls     = isToday(date) ? ' today-header'
+                  : isVacD  ? ' vacation-header'
+                  : isFreeD ? ' free-day-header' : '';
+    const subLbl  = isVacD  ? '<span class="th-date">🌴 vakantie</span>'
+                  : isFreeD ? `<span class="th-date" style="color:#999">${fmtDate(date)} – vrije dag</span>`
+                  : `<span class="th-date">${fmtDate(date)}</span>`;
+    headRow.innerHTML += `<th class="${cls}">${d}${subLbl}</th>`;
   });
 
   const tbody = document.getElementById('roosterBody');
@@ -1270,18 +1295,27 @@ function renderTable() {
     hourTd.innerHTML = `${h.label}<span>${h.time}</span>`;
     tr.appendChild(hourTd);
 
-    DAYS_NL.forEach((_, di) => {
-      const date    = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
-      const freeDay = isFreeDay(date);
-      const td      = document.createElement('td');
-      td.className  = 'cell' + (isToday(date) ? ' today-col' : '') + (freeDay ? ' free-day-cell' : '');
-      td.style.background = freeDay ? '#f0f0f0' : (isToday(date) ? '' : h.bg);
+    const vacWeek = isVacationWeek(currentWeekIdx);
 
-      if (freeDay) {
-        td.innerHTML = '<div style="text-align:center;color:#bbb;font-size:0.72rem;padding:10px 0">—</div>';
+    DAYS_NL.forEach((_, di) => {
+      const date   = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
+      const isVac  = vacWeek;
+      const isFree = isFreeDay(date);
+      const td     = document.createElement('td');
+      if (isVac) {
+        td.className = 'cell vacation-cell';
+        td.innerHTML = '<div style="text-align:center;font-size:1rem;padding:10px 0">🌴</div>';
         tr.appendChild(td);
         return;
       }
+      if (isFree) {
+        td.className = 'cell free-day-cell';
+        td.innerHTML = `<div style="text-align:center;color:#aaa;font-size:0.75rem;padding:10px 0">${fmtDate(date)}<br>—</div>`;
+        tr.appendChild(td);
+        return;
+      }
+      td.className = 'cell' + (isToday(date) ? ' today-col' : '');
+      td.style.background = isToday(date) ? '' : h.bg;
 
       const avail  = getAvail(currentWeekIdx, di, hi, selectedKar);
       const used   = kar.laptops - avail;
@@ -1309,7 +1343,7 @@ function renderTable() {
           </div>
           <div class="chip-info">
             ${isPrio ? '<span class="chip-badge badge-priority">Voorrang</span>' : ''}
-            <span class="chip-badge badge-weeks">×${r.weeks}w</span>
+            <span class="chip-badge badge-weeks">×${parseInt(r.weeks)||1}w</span>
             ${r.vak} · ${r.lokaal} · ${r.laptops}💻
           </div>
           ${origLine}`;
@@ -1377,7 +1411,9 @@ function onNameInput(el) {
 }
 
 function openModal(di, hi, avail) {
+  // Blokkeer vakantieweken en vrije dagen
   const date = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
+  if (isVacationWeek(currentWeekIdx) || isFreeDay(date)) return;
   pending    = { wi: currentWeekIdx, di, hi, editIdx: null };
 
   document.getElementById('modalTitle').textContent   = 'Reservering toevoegen';
@@ -1408,8 +1444,9 @@ function openModal(di, hi, avail) {
 // MODAL – WIJZIGEN
 // ══════════════════════════════════════════════════════════
 function openEditModal(wi, di, hi, ri) {
-  const res  = getRes(wi, di, hi)[ri];
   const date = addDays(ALL_WEEKS[wi].monday, di);
+  if (isVacationWeek(wi) || isFreeDay(date)) return;
+  const res  = getRes(wi, di, hi)[ri];
 
   // Beschikbare laptops: huidig gebruik minus de te wijzigen reservering
   const usedWithout = getLaptopsUsed(wi, di, hi, selectedKar) - res.laptops;
@@ -1473,7 +1510,7 @@ function updateRecurringNote() {
     const endIdx = Math.min(scanWi, ALL_WEEKS.length - 1);
     const endFri = addDays(ALL_WEEKS[endIdx].monday, 4);
     note.style.display = 'block';
-    note.textContent = `📅 Herhaald voor ${weeks} schoolweken t/m ${fmtDate(endFri)} ${endFri.getFullYear()} (vakantieweken overgeslagen).`;
+    note.textContent = `📅 Herhaald voor ${weeks} week${weeks > 1 ? "en" : ""} t/m ${fmtDate(endFri)} ${endFri.getFullYear()} (vakantieweken overgeslagen, vrije dagen tellen mee).`;
   } else {
     note.style.display = 'none';
   }
@@ -1544,7 +1581,7 @@ async function confirmReservation() {
       if (!db[k]) db[k] = [];
       const avail = KARREN[kar].laptops - getLaptopsUsed(scanWi, di, hi, kar);
       if (laptops <= avail) {
-        db[k].push({ name, lokaal, vak, laptops, weeks, kar, createdAt: new Date().toISOString() });
+        db[k].push({ name, lokaal, vak, laptops, weeks: parseInt(weeks), kar, createdAt: new Date().toISOString() });
       }
       schoolWeeksPlanned++;
       scanWi++;
