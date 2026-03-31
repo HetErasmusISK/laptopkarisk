@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Laptop Reservering ISK Almelo</title>
+<title>Laptop Reservering ISK Almelo v4.0</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Nunito+Sans:wght@400;500;600;700&display=swap');
 
@@ -232,6 +232,30 @@
     border-color: #bf360c;
     color: white;
     font-weight: 800;
+  }
+
+  .week-pill.vacation {
+    background: #c8e6c9;
+    border-color: #388e3c;
+    color: #1b5e20;
+    font-weight: 700;
+  }
+
+  .week-pill.vacation.active {
+    background: #388e3c;
+    border-color: #1b5e20;
+    color: white;
+  }
+
+  .free-day-cell {
+    background: #f5f5f5 !important;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .free-day-header {
+    background: #eeeeee !important;
+    color: #9e9e9e !important;
   }
 
   /* ── KAR BAR ── */
@@ -622,7 +646,7 @@
     <div class="login-logo">💻</div>
     <h2>Laptop Reservering ISK Almelo</h2>
     <p>Voer het wachtwoord in om verder te gaan</p>
-    <input type="password" id="pwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <input type="password" id="pwInput" placeholder="Wachtwoord" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <div class="login-err" id="loginErr"></div>
     <button class="login-btn" onclick="doLogin()">Inloggen</button>
   </div>
@@ -639,7 +663,7 @@
     <div class="subtitle">5 laptopkarren · 24 laptops per kar</div>
     <div id="syncStatus" style="display:none;font-size:0.75rem;padding:3px 10px;border-radius:6px;margin-top:4px;font-weight:600;color:#1a4a7a;"></div>
   </div>
-  <div class="periode-label">Periode 4 · 2025–2026</div>
+  <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v4.0</span></div>
 </header>
 
 <!-- MAAND/WEEK NAVIGATIE -->
@@ -785,6 +809,46 @@ const KARREN = [
 
 const PRIORITY_VAKKEN = ['ICT','Engels','Burgerschap','JIJ-toets'];
 
+// Vakantieweken: maandag van de vakantieweek (worden groen getoond, reserveringen doorgeschoven)
+const VACATION_MONDAYS = [
+  '2025-04-21',  // meivakantie week 1 (21–25 apr)
+  '2025-04-28',  // meivakantie week 2 (28 apr–2 mei)
+  '2025-07-07',  // zomervakantie week 1
+  '2025-07-14',  // zomervakantie week 2
+  '2025-07-21',  // zomervakantie week 3
+  '2025-07-28',  // zomervakantie week 4
+  '2025-08-04',  // zomervakantie week 5
+  '2025-08-11',  // zomervakantie week 6 (t/m 15 aug; 18 aug = eerste schoolweek)
+];
+
+// Vrije dagen (individuele data): blanco tonen, geen doorschuiven
+const FREE_DAYS = [
+  '2025-04-06',  // 6 april (2e Paasdag)
+  '2025-05-04',  // 4 mei
+  '2025-05-05',  // 5 mei (Bevrijdingsdag)
+  '2025-05-14',  // 14 mei (Hemelvaartsdag)
+  '2025-05-15',  // 15 mei
+  '2025-05-25',  // 25 mei (Pinksteren)
+  '2025-05-28',  // 28 mei
+];
+
+function dateToStr(date) {
+  // Gebruik lokale datum (geen UTC-verschuiving)
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function isVacationWeek(wi) {
+  const monStr = dateToStr(ALL_WEEKS[wi].monday);
+  return VACATION_MONDAYS.includes(monStr);
+}
+
+function isFreeDay(date) {
+  return FREE_DAYS.includes(dateToStr(date));
+}
+
 // ══════════════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════════════
@@ -800,13 +864,20 @@ let ALL_WEEKS     = [];
 const AUTH_KEY = 'laptopRoosterAuth';
 
 function showApp() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  initApp();
+  try {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } catch(e) {
+    console.error('Fout bij laden app:', e);
+    alert('Fout bij laden: ' + e.message);
+  }
 }
 
 function doLogin() {
   const val = document.getElementById('pwInput').value;
+  console.log('Login poging, lengte:', val.length, 'waarde:', JSON.stringify(val));
+  console.log('Verwacht:', JSON.stringify(PASSWORD));
   if (val === PASSWORD) {
     localStorage.setItem(AUTH_KEY, 'true');
     showApp();
@@ -851,56 +922,42 @@ function isToday(date) {
          date.getDate()     === TODAY.getDate();
 }
 
-function getTargetMonday() {
-  // In het weekend → volgende maandag; anders → maandag van deze week
-  const day = TODAY.getDay();
-  if (day === 6) return addDays(TODAY, 2);  // zaterdag → +2
-  if (day === 0) return addDays(TODAY, 1);  // zondag   → +1
-  return getMondayOf(TODAY);
-}
-
 function weekContainsToday(wi) {
-  const target = getTargetMonday();
+  // Bereken de "doel-maandag": in weekend = volgende maandag
+  const day = TODAY.getDay();
+  const target = day === 6 ? addDays(TODAY, 2) : day === 0 ? addDays(TODAY, 1) : getMondayOf(TODAY);
   const mon = ALL_WEEKS[wi].monday;
   const fri = addDays(mon, 4);
   return mon <= target && target <= fri;
 }
 
 function buildWeeks() {
-  const RANGE_START = new Date(2025, 3, 6);  // 6 april 2025
-  const RANGE_END   = new Date(2026, 5, 26);  // 26 juni 2026
   ALL_WEEKS = [];
-  let cur = getMondayOf(RANGE_START);
+  // Vaste start: maandag 7 april 2025 (week 15, periode 4)
+  // Vaste einde: vrijdag 26 juni 2026
+  const START = new Date(2025, 3, 7);  START.setHours(0,0,0,0);
+  const END   = new Date(2026, 5, 23); END.setHours(23,59,59,0); // maandag 23 juni 2026 (week t/m 25 jun)
+  let cur = new Date(START);
   let idx = 1;
-  while (cur <= RANGE_END) {
+  while (cur <= END) {
     ALL_WEEKS.push({ index: idx++, monday: new Date(cur) });
     cur = addDays(cur, 7);
   }
 
-  // In het weekend (za=6, zo=0) → open de volgende week
-  const dayOfWeek = TODAY.getDay();
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-  if (isWeekend) {
-    // Bereken de eerstvolgende maandag
-    const daysUntilMonday = dayOfWeek === 6 ? 2 : 1;
-    const nextMonday = addDays(TODAY, daysUntilMonday);
-    const ti = ALL_WEEKS.findIndex(w => {
-      const fri = addDays(w.monday, 4);
-      return w.monday <= nextMonday && nextMonday <= fri;
-    });
-    currentWeekIdx = ti >= 0 ? ti : 0;
+  // Zoek de huidige of dichtstbijzijnde week
+  const ti = ALL_WEEKS.findIndex(w => weekContainsToday(ALL_WEEKS.indexOf(w)));
+  if (ti >= 0) {
+    currentWeekIdx = ti;
   } else {
-    // Doordeweeks → huidige week
-    const ti = ALL_WEEKS.findIndex(w => weekContainsToday(ALL_WEEKS.indexOf(w)));
-    currentWeekIdx = ti >= 0 ? ti : 0;
+    // TODAY valt buiten de range → begin bij week 0 (7 april 2025)
+    currentWeekIdx = 0;
   }
 }
 
 // ══════════════════════════════════════════════════════════
 // JSONBIN OPSLAG
 // ══════════════════════════════════════════════════════════
-const CACHE_KEY      = 'laptopRoosterCache';
+// Cache uitgeschakeld – altijd vers laden van JSONBin
 const TEACHER_KEY    = 'laptopDocenten';
 
 function saveTeacherProfile(name, lokaal, vak, laptops) {
@@ -933,49 +990,61 @@ function showSyncStatus(msg, color) {
   if (color === 'green') setTimeout(() => { el.style.display = 'none'; }, 2500);
 }
 
-function saveCache() {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(db)); } catch(e) {}
+// Wis alleen écht oude cache-varianten (niet de nieuwe DB_CACHE_KEY)
+['laptopRoosterCache','laptopRoosterCache_v2','laptopRooster_p4_apr2025'].forEach(k => {
+  try { localStorage.removeItem(k); } catch(e) {}
+});
+
+const DB_CACHE_KEY = 'iskRoosterData_p4';
+
+function saveLocalCache() {
+  try { localStorage.setItem(DB_CACHE_KEY, JSON.stringify(db)); } catch(e) {}
 }
 
-function loadCache() {
+function loadLocalCache() {
   try {
-    const c = localStorage.getItem(CACHE_KEY);
+    const c = localStorage.getItem(DB_CACHE_KEY);
     return c ? JSON.parse(c) : null;
   } catch(e) { return null; }
 }
 
 async function loadFromBin() {
-  // Stap 1: laad cache direct → rooster meteen zichtbaar
-  const cached = loadCache();
+  // Stap 1: toon cache direct → razendsnel, geen wachttijd
+  const cached = loadLocalCache();
   if (cached) {
     db = cached;
     renderMonthNav();
     renderAll();
-    showSyncStatus('⟳ Synchroniseren…');
+    showSyncStatus('⟳ Bijwerken…');
   } else {
-    showSyncStatus('⟳ Eerste keer laden…');
+    showSyncStatus('⟳ Laden…');
   }
 
-  // Stap 2: haal verse data op de achtergrond
+  // Stap 2: haal verse data op achtergrond
   try {
     const r = await fetch(JSONBIN_URL + '/latest', {
       headers: { 'X-Master-Key': API_KEY }
     });
     const json = await r.json();
-    const fresh = json.record || {};
-    db = fresh;
-    saveCache();
-    renderAll();
+    db = json.record || {};
+    saveLocalCache();
+    if (cached) {
+      // Alleen opnieuw renderen als data verschilt
+      renderAll();
+    } else {
+      renderMonthNav();
+      renderAll();
+    }
     showSyncStatus('✓ Bijgewerkt', 'rgba(27,94,32,0.15)');
   } catch(e) {
-    console.warn('Sync mislukt, cache wordt gebruikt.', e);
-    showSyncStatus('⚠ Offline – cache', 'rgba(183,28,28,0.12)');
-    if (!cached) db = {};
+    console.warn('Sync mislukt, cache gebruikt.', e);
+    if (!cached) { db = {}; renderMonthNav(); renderAll(); }
+    showSyncStatus('⚠ Offline – lokale versie', 'rgba(183,28,28,0.12)');
   }
 }
 
 async function saveToBin() {
-  saveCache(); // meteen lokaal opslaan
+  saveLocalCache(); // direct lokaal opslaan → volgende keer meteen zichtbaar
   showSyncStatus('⟳ Opslaan…');
   try {
     await fetch(JSONBIN_URL, {
@@ -997,7 +1066,15 @@ async function saveToBin() {
 // ══════════════════════════════════════════════════════════
 // DATA HELPERS
 // ══════════════════════════════════════════════════════════
-function cellKey(wi, di, hi) { return `w${wi}_d${di}_h${hi}`; }
+function cellKey(wi, di, hi) {
+  // Gebruik de datumstring van de maandag als sleutel, niet de weekindex
+  // Zo blijft data correct na herindexering van weken
+  const monday = ALL_WEEKS[wi].monday;
+  const y = monday.getFullYear();
+  const m = String(monday.getMonth()+1).padStart(2,'0');
+  const d = String(monday.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}_d${di}_h${hi}`;
+}
 
 function getRes(wi, di, hi) { return db[cellKey(wi,di,hi)] || []; }
 
@@ -1016,7 +1093,38 @@ function getAvail(wi, di, hi, karId) {
 // ══════════════════════════════════════════════════════════
 async function initApp() {
   buildWeeks();
-  await loadFromBin(); // rendert zelf zodra cache beschikbaar is
+  await loadFromBin();
+  shiftVacationReservations();
+}
+
+function shiftVacationReservations() {
+  // Doorschuiven: zoek reserveringen in vakantieweken en verplaats ze
+  // naar de eerstvolgende niet-vakantieweek met hetzelfde dag+uur
+  let changed = false;
+  ALL_WEEKS.forEach((w, wi) => {
+    if (!isVacationWeek(wi)) return;
+    for (let di = 0; di < 5; di++) {
+      for (let hi = 0; hi < 5; hi++) {
+        const k = cellKey(wi, di, hi);
+        if (!db[k] || db[k].length === 0) continue;
+        // Zoek de volgende niet-vakantieweek
+        let targetWi = wi + 1;
+        while (targetWi < ALL_WEEKS.length && isVacationWeek(targetWi)) targetWi++;
+        if (targetWi >= ALL_WEEKS.length) return;
+        const targetKey = cellKey(targetWi, di, hi);
+        if (!db[targetKey]) db[targetKey] = [];
+        // Verplaats alle reserveringen
+        db[k].forEach(r => {
+          // Voorkom duplicaten
+          const exists = db[targetKey].some(t => t.name === r.name && t.vak === r.vak && t.kar === r.kar);
+          if (!exists) db[targetKey].push({ ...r, shiftedFromVacation: true });
+        });
+        db[k] = [];
+        changed = true;
+      }
+    }
+  });
+  if (changed) saveToBin();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1026,16 +1134,27 @@ function renderMonthNav() {
   const row = document.getElementById('monthRow');
   row.innerHTML = '';
 
-  // Groepeer weken per maand (op basis van de vrijdag van de week)
-  const groups = {};
+  // Groepeer weken per maand - alleen vanaf april 2025
+  const PERIOD_START = new Date(2025, 3, 1); // 1 april 2025
+  const groups = new Map();
   ALL_WEEKS.forEach((w, wi) => {
-    const fri = addDays(w.monday, 4);
-    const key = `${fri.getFullYear()}-${fri.getMonth()}`;
-    if (!groups[key]) groups[key] = { year: fri.getFullYear(), month: fri.getMonth(), weeks: [] };
-    groups[key].weeks.push(wi);
+    const y = w.monday.getFullYear();
+    const m = w.monday.getMonth();
+    // Periode 4: 7 april 2025 t/m 25 juni 2026
+    if (y < 2025) return;
+    if (y === 2025 && m < 3) return;   // vóór april 2025
+    if (y === 2026 && m > 5) return;   // na juni 2026
+    if (y > 2026) return;
+    const key = `${y}-${String(m).padStart(2,'0')}`;
+    if (!groups.has(key)) groups.set(key, { year: y, month: m, weeks: [] });
+    groups.get(key).weeks.push(wi);
   });
 
-  Object.values(groups).forEach(g => {
+  // Sorteer de Map op sleutel (chronologisch)
+  const sortedKeys = Array.from(groups.keys()).sort();
+
+  sortedKeys.forEach(key => {
+    const g = groups.get(key);
     const div = document.createElement('div');
     div.className = 'month-group';
 
@@ -1048,17 +1167,23 @@ function renderMonthNav() {
     pills.className = 'week-pills';
 
     g.weeks.forEach(wi => {
-      const w = ALL_WEEKS[wi];
+      const w   = ALL_WEEKS[wi];
       const mon = w.monday;
       const fri = addDays(mon, 4);
       const isThisWeek = weekContainsToday(wi);
+      const isVac      = isVacationWeek(wi);
 
       const btn = document.createElement('button');
-      btn.id = `wpill-${wi}`;
+      btn.id        = `wpill-${wi}`;
       btn.className = 'week-pill' +
-        (wi === currentWeekIdx ? ' active' : '') +
-        (isThisWeek ? ' has-today' : '');
-      btn.innerHTML = `${fmtDate(mon)}<br><span style="opacity:.7">${fmtDate(fri)}</span>`;
+        (wi === currentWeekIdx  ? ' active'   : '') +
+        (isThisWeek && !isVac  ? ' has-today' : '') +
+        (isVac                  ? ' vacation'  : '');
+
+      const vacLabel = isVac
+        ? '<br><span style="font-size:0.65rem;font-weight:700">🌴 vakantie</span>'
+        : '';
+      btn.innerHTML = `${fmtDate(mon)}<br><span style="opacity:.7">${fmtDate(fri)}</span>${vacLabel}`;
       btn.onclick = () => { currentWeekIdx = wi; updateWeekPills(); renderAll(); };
       pills.appendChild(btn);
     });
@@ -1067,11 +1192,7 @@ function renderMonthNav() {
     row.appendChild(div);
   });
 
-  // Scroll actieve week in beeld
-  setTimeout(() => {
-    const el = document.getElementById(`wpill-${currentWeekIdx}`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-  }, 100);
+
 }
 
 function updateWeekPills() {
@@ -1080,7 +1201,8 @@ function updateWeekPills() {
     if (!el) return;
     el.className = 'week-pill' +
       (wi === currentWeekIdx ? ' active' : '') +
-      (weekContainsToday(wi) ? ' has-today' : '');
+      (weekContainsToday(wi) ? ' has-today' : '') +
+      (isVacationWeek(wi) ? ' vacation' : '');
   });
 }
 
@@ -1119,8 +1241,9 @@ function renderTable() {
   headRow.innerHTML = '<th>Lesuur</th>';
   DAYS_NL.forEach((d, di) => {
     const date = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
-    const cls  = isToday(date) ? ' today-header' : '';
-    headRow.innerHTML += `<th class="${cls}">${d}<span class="th-date">${fmtDate(date)}</span></th>`;
+    const cls  = isToday(date) ? ' today-header' : (isFreeDay(date) ? ' free-day-header' : '');
+    const freeLbl = isFreeDay(date) ? '<span class="th-date" style="color:#bbb">vrije dag</span>' : `<span class="th-date">${fmtDate(date)}</span>`;
+    headRow.innerHTML += `<th class="${cls}">${d}${freeLbl}</th>`;
   });
 
   const tbody = document.getElementById('roosterBody');
@@ -1136,9 +1259,17 @@ function renderTable() {
     tr.appendChild(hourTd);
 
     DAYS_NL.forEach((_, di) => {
-      const date  = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
-      const td    = document.createElement('td');
-      td.className = 'cell' + (isToday(date) ? ' today-col' : '');
+      const date    = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
+      const freeDay = isFreeDay(date);
+      const td      = document.createElement('td');
+      td.className  = 'cell' + (isToday(date) ? ' today-col' : '') + (freeDay ? ' free-day-cell' : '');
+      td.style.background = freeDay ? '#f0f0f0' : (isToday(date) ? '' : h.bg);
+
+      if (freeDay) {
+        td.innerHTML = '<div style="text-align:center;color:#bbb;font-size:0.72rem;padding:10px 0">—</div>';
+        tr.appendChild(td);
+        return;
+      }
 
       const avail  = getAvail(currentWeekIdx, di, hi, selectedKar);
       const used   = kar.laptops - avail;
@@ -1320,10 +1451,17 @@ function updateRecurringNote() {
   const weeks = parseInt(document.getElementById('fWeken').value);
   const note  = document.getElementById('recurringNote');
   if (weeks > 1 && pending) {
-    const endIdx = Math.min(pending.wi + weeks - 1, ALL_WEEKS.length - 1);
+    // Bereken einddatum: sla vakantieweken over
+    let schoolWeeks = 0;
+    let scanWi = pending.wi;
+    while (schoolWeeks < weeks && scanWi < ALL_WEEKS.length) {
+      if (!isVacationWeek(scanWi)) schoolWeeks++;
+      if (schoolWeeks < weeks) scanWi++;
+    }
+    const endIdx = Math.min(scanWi, ALL_WEEKS.length - 1);
     const endFri = addDays(ALL_WEEKS[endIdx].monday, 4);
     note.style.display = 'block';
-    note.textContent = `📅 Herhaald voor ${weeks} weken t/m ${fmtDate(endFri)} ${endFri.getFullYear()}.`;
+    note.textContent = `📅 Herhaald voor ${weeks} schoolweken t/m ${fmtDate(endFri)} ${endFri.getFullYear()} (vakantieweken overgeslagen).`;
   } else {
     note.style.display = 'none';
   }
@@ -1381,16 +1519,23 @@ async function confirmReservation() {
       editedAt:     new Date().toISOString()
     };
   } else {
-    // NIEUW – herhaal voor meerdere weken
-    for (let w = 0; w < weeks; w++) {
-      const targetWi = wi + w;
-      if (targetWi >= ALL_WEEKS.length) break;
-      const k = cellKey(targetWi, di, hi);
+    // NIEUW – herhaal voor meerdere weken, vakantieweken overslaan (tellen niet mee)
+    let schoolWeeksPlanned = 0;
+    let scanWi = wi;
+    while (schoolWeeksPlanned < weeks && scanWi < ALL_WEEKS.length) {
+      if (isVacationWeek(scanWi)) {
+        // Vakantieweek: sla over, telt NIET mee voor het aantal weken
+        scanWi++;
+        continue;
+      }
+      const k = cellKey(scanWi, di, hi);
       if (!db[k]) db[k] = [];
-      const avail = KARREN[kar].laptops - getLaptopsUsed(targetWi, di, hi, kar);
+      const avail = KARREN[kar].laptops - getLaptopsUsed(scanWi, di, hi, kar);
       if (laptops <= avail) {
         db[k].push({ name, lokaal, vak, laptops, weeks, kar, createdAt: new Date().toISOString() });
       }
+      schoolWeeksPlanned++;
+      scanWi++;
     }
   }
 
@@ -1475,6 +1620,13 @@ document.getElementById('deleteModalOverlay').addEventListener('click', e => {
 });
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
+// Reset auth voor nieuwe versie v4.0
+const CURRENT_VERSION = 'v4.0';
+if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
+  localStorage.removeItem(AUTH_KEY);
+  localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
+}
+
 if (localStorage.getItem(AUTH_KEY) === 'true') {
   showApp();
 }
