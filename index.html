@@ -949,8 +949,11 @@ function buildWeeks() {
   if (ti >= 0) {
     currentWeekIdx = ti;
   } else {
-    // TODAY valt buiten de range → begin bij week 0 (7 april 2025)
-    currentWeekIdx = 0;
+    // TODAY valt vóór de start van periode 4 → open bij eerste week (7 april 2025)
+    // TODAY valt ná het einde → open bij laatste week
+    const target = TODAY.getDay() === 6 ? addDays(TODAY, 2) :
+                   TODAY.getDay() === 0 ? addDays(TODAY, 1) : getMondayOf(TODAY);
+    currentWeekIdx = target < ALL_WEEKS[0].monday ? 0 : ALL_WEEKS.length - 1;
   }
 }
 
@@ -1635,7 +1638,7 @@ if (localStorage.getItem(AUTH_KEY) === 'true') {
     <div class="modal-sub" id="deleteModalSub"></div>
     <div style="background:#fff3e0;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:0.82rem;color:#7a3a00;">
       <strong>Let op:</strong> deze reservering is ingesteld voor
-      <strong id="deleteWeeksInfo">1 week</strong>.
+      <strong id="deleteWeeksInfo"></strong>.
       Wil je alleen <strong>deze week</strong> verwijderen, of <strong>alle herhalingen</strong>?
     </div>
     <div class="modal-actions" style="flex-direction:column;gap:8px">
