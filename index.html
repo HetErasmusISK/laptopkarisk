@@ -663,7 +663,10 @@
     <div class="subtitle">5 laptopkarren · 24 laptops per kar</div>
     <div id="syncStatus" style="display:none;font-size:0.75rem;padding:3px 10px;border-radius:6px;margin-top:4px;font-weight:600;color:#1a4a7a;"></div>
   </div>
-  <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v4.0</span></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v4.0</span></div>
+    <button onclick="clearDatabase()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Verwijder alle reserveringen uit de database">🗑 DB wissen</button>
+  </div>
 </header>
 
 <!-- MAAND/WEEK NAVIGATIE -->
@@ -1153,49 +1156,55 @@ function renderMonthNav() {
     groups.get(key).weeks.push(wi);
   });
 
-  // Sorteer de Map op sleutel (chronologisch)
-  const sortedKeys = Array.from(groups.keys()).sort();
+  // Bepaal de actieve maand
+  const activeWeek   = ALL_WEEKS[currentWeekIdx];
+  const activeMon    = activeWeek ? activeWeek.monday : null;
+  const activeKey    = activeMon
+    ? `${activeMon.getFullYear()}-${String(activeMon.getMonth()).padStart(2,'0')}`
+    : null;
 
-  sortedKeys.forEach(key => {
-    const g = groups.get(key);
+  // Sorteer: actieve maand eerst, daarna chronologisch verder
+  const allKeys    = Array.from(groups.keys()).sort();
+  const activePos  = activeKey ? allKeys.indexOf(activeKey) : 0;
+  // Render: begin bij de actieve maand, dan de rest
+  const orderedKeys = activePos >= 0
+    ? [...allKeys.slice(activePos), ...allKeys.slice(0, activePos)]
+    : allKeys;
+
+  function buildPill(wi) {
+    const w   = ALL_WEEKS[wi];
+    const mon = w.monday;
+    const fri = addDays(mon, 4);
+    const isThisWeek = weekContainsToday(wi);
+    const isVac      = isVacationWeek(wi);
+    const btn = document.createElement('button');
+    btn.id        = `wpill-${wi}`;
+    btn.className = 'week-pill' +
+      (wi === currentWeekIdx ? ' active'    : '') +
+      (isThisWeek && !isVac ? ' has-today'  : '') +
+      (isVac                ? ' vacation'   : '');
+    const vacLabel = isVac
+      ? '<br><span style="font-size:0.65rem;font-weight:700">🌴 vakantie</span>'
+      : '';
+    btn.innerHTML = `${fmtDate(mon)}<br><span style="opacity:.7">${fmtDate(fri)}</span>${vacLabel}`;
+    btn.onclick = () => { currentWeekIdx = wi; updateWeekPills(); renderAll(); };
+    return btn;
+  }
+
+  orderedKeys.forEach(key => {
+    const g   = groups.get(key);
     const div = document.createElement('div');
     div.className = 'month-group';
-
     const lbl = document.createElement('div');
     lbl.className = 'month-label';
     lbl.textContent = `${FULL_MONTHS[g.month]} ${g.year}`;
     div.appendChild(lbl);
-
     const pills = document.createElement('div');
     pills.className = 'week-pills';
-
-    g.weeks.forEach(wi => {
-      const w   = ALL_WEEKS[wi];
-      const mon = w.monday;
-      const fri = addDays(mon, 4);
-      const isThisWeek = weekContainsToday(wi);
-      const isVac      = isVacationWeek(wi);
-
-      const btn = document.createElement('button');
-      btn.id        = `wpill-${wi}`;
-      btn.className = 'week-pill' +
-        (wi === currentWeekIdx  ? ' active'   : '') +
-        (isThisWeek && !isVac  ? ' has-today' : '') +
-        (isVac                  ? ' vacation'  : '');
-
-      const vacLabel = isVac
-        ? '<br><span style="font-size:0.65rem;font-weight:700">🌴 vakantie</span>'
-        : '';
-      btn.innerHTML = `${fmtDate(mon)}<br><span style="opacity:.7">${fmtDate(fri)}</span>${vacLabel}`;
-      btn.onclick = () => { currentWeekIdx = wi; updateWeekPills(); renderAll(); };
-      pills.appendChild(btn);
-    });
-
+    g.weeks.forEach(wi => pills.appendChild(buildPill(wi)));
     div.appendChild(pills);
     row.appendChild(div);
   });
-
-
 }
 
 function updateWeekPills() {
@@ -1618,6 +1627,21 @@ document.getElementById('modalOverlay').addEventListener('click', e => {
 document.getElementById('deleteModalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('deleteModalOverlay')) closeDeleteModal();
 });
+
+async function clearDatabase() {
+  const pw = prompt('Voer het beheerderwachtwoord in:');
+  if (pw === null) return; // geannuleerd
+  if (pw !== '7772SNR54!') {
+    alert('Onjuist wachtwoord.');
+    return;
+  }
+  if (!confirm('Weet je zeker dat je ALLE reserveringen wilt verwijderen?')) return;
+  db = {};
+  saveLocalCache();
+  await saveToBin();
+  renderAll();
+  alert('Database geleegd.');
+}
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
