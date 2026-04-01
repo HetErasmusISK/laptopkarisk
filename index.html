@@ -823,11 +823,11 @@ const HOURS = [
 ];
 
 const KARREN = [
-  { id: 0, name: 'Laptopkar 1', laptops: 24 },
-  { id: 1, name: 'Laptopkar 2', laptops: 24 },
-  { id: 2, name: 'Laptopkar 3', laptops: 24 },
-  { id: 3, name: 'Laptopkar 4', laptops: 24 },
-  { id: 4, name: 'Laptopkar 5', laptops: 24 },
+  { id: 0, name: 'Laptopkar 1', laptops: 24, lokaal: 'Lokaal 2' },
+  { id: 1, name: 'Laptopkar 2', laptops: 24, lokaal: 'Lokaal C5' },
+  { id: 2, name: 'Laptopkar 3', laptops: 24, lokaal: 'Lokaal 7' },
+  { id: 3, name: 'Laptopkar 4', laptops: 24, lokaal: 'Lokaal 21' },
+  { id: 4, name: 'Laptopkar 5', laptops: 24, lokaal: 'Lokaal C12' },
 ];
 
 const PRIORITY_VAKKEN = ['ICT','Engels','Burgerschap','JIJ-toets'];
@@ -1254,7 +1254,7 @@ function renderKarBar() {
     // (som over alle uren als het niet vandaag is in deze week)
     const btn = document.createElement('button');
     btn.className = 'kar-btn' + (selectedKar === kar.id ? ' active' : '');
-    btn.innerHTML = `<span class="kar-name">${kar.name}</span>`;
+    btn.innerHTML = `<span class="kar-name">${kar.name}</span>${kar.lokaal ? `<span class="kar-avail">${kar.lokaal}</span>` : ''}`;
     btn.onclick = () => { selectedKar = kar.id; renderAll(); };
     wrap.appendChild(btn);
   });
