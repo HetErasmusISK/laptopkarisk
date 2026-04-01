@@ -196,7 +196,7 @@
   .week-pills { display: flex; gap: 3px; }
 
   .week-pill {
-    padding: 4px 9px;
+    padding: 4px 6px;
     border-radius: 6px;
     border: 1.5px solid var(--border);
     background: #e0f0fa;
@@ -209,6 +209,13 @@
     transition: all 0.12s;
     line-height: 1.3;
     text-align: center;
+    width: 72px;
+    height: 52px;
+    overflow: hidden;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   .week-pill:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-xlight); }
@@ -1200,10 +1207,9 @@ function renderMonthNav() {
         (wi === currentWeekIdx ? ' active'   : '') +
         (isThisWeek && !isVac ? ' has-today' : '') +
         (isVac                ? ' vacation'  : '');
-      const vacLabel = isVac
-        ? '<br><span style="font-size:0.65rem;font-weight:700">🌴 vakantie</span>'
-        : '';
-      btn.innerHTML = `${fmtDate(mon)}<br><span style="opacity:.7">${fmtDate(fri)}</span>${vacLabel}`;
+      btn.innerHTML = isVac
+        ? `<span style="font-size:0.9rem">🌴</span><span style="font-size:0.65rem;font-weight:700;display:block">${fmtDate(mon)}<br>${fmtDate(fri)}</span>`
+        : `${fmtDate(mon)}<br><span style="opacity:.7">${fmtDate(fri)}</span>`;
       btn.onclick = () => { currentWeekIdx = wi; updateWeekPills(); renderAll(); };
       pills.appendChild(btn);
     });
