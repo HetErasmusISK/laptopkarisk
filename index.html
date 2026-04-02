@@ -684,7 +684,7 @@
     <div id="syncStatus" style="display:none;font-size:0.75rem;padding:3px 10px;border-radius:6px;margin-top:4px;font-weight:600;color:#1a4a7a;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v4.0</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v7.1</span></div>
     <button onclick="clearDatabase()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Verwijder alle reserveringen uit de database">🗑 DB wissen</button>
   </div>
 </header>
@@ -1689,7 +1689,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v4.0';
+const CURRENT_VERSION = 'v7.1';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
