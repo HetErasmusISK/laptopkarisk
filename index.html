@@ -716,7 +716,7 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v8.4</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v8.5</span></div>
     <button onclick="syncCacheToGist()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Stuur lokale cache naar Gist">☁️ Cache opslaan</button>
     <button onclick="clearDatabase()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Verwijder alle reserveringen uit de database">🗑 DB wissen</button>
   </div>
@@ -1106,12 +1106,11 @@ async function loadFromBin() {
 
   // Stap 2: haal verse data op (alleen als cache niet recent is)
   try {
-    // Laden kan zonder token via de publieke raw URL
+    // Laden via publieke raw URL - geeft JSON direct terug
     const rawUrl = `https://gist.githubusercontent.com/HetErasmusISK/10bb9c1d79f90a847e06018b476632f7/raw/rooster.json?t=${Date.now()}`;
     const r = await fetch(rawUrl);
-    const json = await r.json();
-    const content = json.files && json.files[GIST_FILE] ? json.files[GIST_FILE].content : '{}';
-    db = JSON.parse(content) || {};
+    const text = await r.text();
+    db = JSON.parse(text) || {};
     saveLocalCache();
     renderAll();
     showSyncStatus('✓ Bijgewerkt', 'rgba(27,94,32,0.15)');
@@ -1780,7 +1779,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v8.4';
+const CURRENT_VERSION = 'v8.5';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
