@@ -716,7 +716,7 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v8.1</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v8.4</span></div>
     <button onclick="syncCacheToGist()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Stuur lokale cache naar Gist">☁️ Cache opslaan</button>
     <button onclick="clearDatabase()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Verwijder alle reserveringen uit de database">🗑 DB wissen</button>
   </div>
@@ -841,7 +841,8 @@
 // ══════════════════════════════════════════════════════════
 const PASSWORD       = 'ISK2026!';
 const GIST_ID        = '10bb9c1d79f90a847e06018b476632f7';
-const GIST_TOKEN     = localStorage.getItem('iskGistToken') || '';
+// Token wordt dynamisch gelezen bij gebruik
+function getGistToken() { return localStorage.getItem('iskGistToken') || ''; }
 const GIST_FILE      = 'rooster.json';
 const GIST_URL       = `https://api.github.com/gists/${GIST_ID}`;
 
@@ -929,10 +930,12 @@ function showApp() {
 
 function doLogin() {
   const val = document.getElementById('pwInput').value;
-  console.log('Login poging, lengte:', val.length, 'waarde:', JSON.stringify(val));
-  console.log('Verwacht:', JSON.stringify(PASSWORD));
   if (val === PASSWORD) {
     localStorage.setItem(AUTH_KEY, 'true');
+    // Sla token automatisch op bij inloggen
+    if (!localStorage.getItem('iskGistToken')) {
+      localStorage.setItem('iskGistToken', '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');
+    }
     showApp();
   } else {
     const inp = document.getElementById('pwInput');
@@ -1103,9 +1106,9 @@ async function loadFromBin() {
 
   // Stap 2: haal verse data op (alleen als cache niet recent is)
   try {
-    const r = await fetch(GIST_URL + '?t=' + Date.now(), {
-      headers: { 'Authorization': 'token ' + GIST_TOKEN }
-    });
+    // Laden kan zonder token via de publieke raw URL
+    const rawUrl = `https://gist.githubusercontent.com/HetErasmusISK/10bb9c1d79f90a847e06018b476632f7/raw/rooster.json?t=${Date.now()}`;
+    const r = await fetch(rawUrl);
     const json = await r.json();
     const content = json.files && json.files[GIST_FILE] ? json.files[GIST_FILE].content : '{}';
     db = JSON.parse(content) || {};
@@ -1120,6 +1123,16 @@ async function loadFromBin() {
 }
 
 async function saveToBin() {
+  // Vraag token als die nog niet is opgeslagen
+  if (!localStorage.getItem('iskGistToken')) {
+    const token = prompt('Voer de GitHub token in om op te slaan (eenmalig):');
+    if (!token || !token.trim()) {
+      showToast('⚠ Geen token – niet opgeslagen', 'error', 4000);
+      justSaved = false;
+      return;
+    }
+    localStorage.setItem('iskGistToken', token.trim());
+  }
   saveLocalCache();
   justSaved = true;
   showSyncStatus('⟳ Opslaan…');
@@ -1129,7 +1142,7 @@ async function saveToBin() {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'token ' + GIST_TOKEN
+        'Authorization': 'token ' + getGistToken()
       },
       body: JSON.stringify({
         files: { [GIST_FILE]: { content: JSON.stringify(db) } }
@@ -1176,13 +1189,6 @@ function getAvail(wi, di, hi, karId) {
 // INIT
 // ══════════════════════════════════════════════════════════
 async function initApp() {
-  // Vraag token als die nog niet is opgeslagen
-  if (!localStorage.getItem('iskGistToken')) {
-    const token = prompt('Voer de GitHub token in (eenmalig):');
-    if (token && token.trim()) {
-      localStorage.setItem('iskGistToken', token.trim());
-    }
-  }
   buildWeeks();
   await loadFromBin();
   shiftVacationReservations();
@@ -1774,7 +1780,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v8.1';
+const CURRENT_VERSION = 'v8.4';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
