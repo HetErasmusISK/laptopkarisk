@@ -716,8 +716,9 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v8.7</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v8.9</span></div>
     <button onclick="syncCacheToGist()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Stuur lokale cache naar Gist">☁️ Cache opslaan</button>
+    <button onclick="setToken()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="GitHub token instellen">🔑 Token</button>
     <button onclick="clearDatabase()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Verwijder alle reserveringen uit de database">🗑 DB wissen</button>
   </div>
 </header>
@@ -1143,14 +1144,18 @@ async function saveToBin() {
         files: { [GIST_FILE]: { content: JSON.stringify(db) } }
       })
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('GitHub fout:', res.status, errText);
+      throw new Error('HTTP ' + res.status + ': ' + errText.substring(0,100));
+    }
     localStorage.setItem('iskSavedAt', Date.now().toString());
     showSyncStatus('✓ Opgeslagen', 'rgba(27,94,32,0.15)');
     showToast('✓ Opgeslagen!', 'success', 2500);
   } catch(e) {
     console.error('Opslaan mislukt:', e);
     showSyncStatus('⚠ Opslaan mislukt', 'rgba(183,28,28,0.12)');
-    showToast('⚠ Opslaan mislukt – controleer internet', 'error', 5000);
+    showToast('⚠ ' + e.message, 'error', 8000);
   }
   justSaved = false;
 }
@@ -1747,6 +1752,19 @@ document.getElementById('deleteModalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('deleteModalOverlay')) closeDeleteModal();
 });
 
+function setToken() {
+  const huidig = localStorage.getItem('iskGistToken') ? '(al ingesteld)' : '(nog niet ingesteld)';
+  const token = prompt(`GitHub token invoeren ${huidig}:\n(laat leeg om te wissen)`);
+  if (token === null) return; // geannuleerd
+  if (token.trim() === '') {
+    localStorage.removeItem('iskGistToken');
+    alert('Token verwijderd.');
+  } else {
+    localStorage.setItem('iskGistToken', token.trim());
+    alert('Token opgeslagen!');
+  }
+}
+
 async function syncCacheToGist() {
   const cached = loadLocalCache();
   if (!cached || Object.keys(cached).length === 0) {
@@ -1775,7 +1793,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v8.7';
+const CURRENT_VERSION = 'v8.9';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
