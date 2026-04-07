@@ -716,7 +716,7 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v7.5</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v7.6</span></div>
     <button onclick="clearDatabase()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Verwijder alle reserveringen uit de database">🗑 DB wissen</button>
   </div>
 </header>
@@ -1080,38 +1080,34 @@ function loadLocalCache() {
 }
 
 async function loadFromBin() {
-  // Stap 1: toon cache direct → razendsnel, geen wachttijd
-  const cached = loadLocalCache();
+  const cached    = loadLocalCache();
+  const savedAt   = parseInt(localStorage.getItem('iskSavedAt') || '0');
+  const secAgo    = (Date.now() - savedAt) / 1000;
+  const cacheRecent = secAgo < 30; // cache is minder dan 30 sec geleden opgeslagen
+
+  // Stap 1: laad cache direct
   if (cached) {
     db = cached;
     renderMonthNav();
     renderAll();
+    if (cacheRecent) {
+      showSyncStatus('✓ Opgeslagen', 'rgba(27,94,32,0.15)');
+      return; // cache is vers genoeg, geen JSONBin nodig
+    }
     showSyncStatus('⟳ Bijwerken…');
   } else {
     showSyncStatus('⟳ Laden…');
   }
 
-  // Stap 2: haal verse data op achtergrond (niet als we net hebben opgeslagen)
-  if (justSaved) {
-    showSyncStatus('✓ Lokaal opgeslagen', 'rgba(27,94,32,0.15)');
-    return;
-  }
+  // Stap 2: haal verse data op (alleen als cache niet recent is)
   try {
     const r = await fetch(JSONBIN_URL + '/latest', {
       headers: { 'X-Master-Key': API_KEY }
     });
     const json = await r.json();
-    // Alleen overschrijven als we NIET net hebben opgeslagen
-    if (!justSaved) {
-      db = json.record || {};
-      saveLocalCache();
-      if (cached) {
-        renderAll();
-      } else {
-        renderMonthNav();
-        renderAll();
-      }
-    }
+    db = json.record || {};
+    saveLocalCache();
+    renderAll();
     showSyncStatus('✓ Bijgewerkt', 'rgba(27,94,32,0.15)');
   } catch(e) {
     console.warn('Sync mislukt, cache gebruikt.', e);
@@ -1134,6 +1130,7 @@ async function saveToBin() {
       },
       body: JSON.stringify(db)
     });
+    localStorage.setItem('iskSavedAt', Date.now().toString());
     showSyncStatus('✓ Opgeslagen', 'rgba(27,94,32,0.15)');
     showToast('✓ Opgeslagen!', 'success', 2000);
   } catch(e) {
@@ -1141,8 +1138,7 @@ async function saveToBin() {
     showSyncStatus('⚠ Opslaan mislukt', 'rgba(183,28,28,0.12)');
     showToast('⚠ Opslaan mislukt!', 'error', 4000);
   }
-  // Na 10 seconden mag loadFromBin weer vers laden
-  setTimeout(() => { justSaved = false; }, 10000);
+  justSaved = false;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1754,7 +1750,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v7.5';
+const CURRENT_VERSION = 'v7.6';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
