@@ -39,6 +39,36 @@
     min-height: 100vh;
   }
 
+
+  /* ── TOAST POPUP ── */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1a3a5e;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .toast.success { background: #1b5e20; }
+  .toast.error   { background: #b71c1c; }
+  .toast.saving  { background: #1565c0; }
+
   /* ── LOGIN ── */
   #loginScreen {
     position: fixed; inset: 0;
@@ -660,6 +690,8 @@
 </head>
 <body>
 
+<div class="toast" id="toast"></div>
+
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
@@ -684,7 +716,7 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v7.3</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v7.5</span></div>
     <button onclick="clearDatabase()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Verwijder alle reserveringen uit de database">🗑 DB wissen</button>
   </div>
 </header>
@@ -1011,6 +1043,24 @@ function showSyncStatus(msg, color) {
   if (color === 'green') setTimeout(() => { el.style.display = 'none'; }, 2500);
 }
 
+let toastTimer = null;
+let justSaved = false; // voorkomt dat achtergrond-sync net opgeslagen data overschrijft
+function showToast(msg, type, duration) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  if (toastTimer) clearTimeout(toastTimer);
+  el.textContent = msg;
+  el.className = 'toast ' + (type || '');
+  // Force reflow
+  void el.offsetWidth;
+  el.classList.add('show');
+  if (duration !== 0) {
+    toastTimer = setTimeout(() => {
+      el.classList.remove('show');
+    }, duration || 2500);
+  }
+}
+
 // Wis alleen écht oude cache-varianten (niet de nieuwe DB_CACHE_KEY)
 ['laptopRoosterCache','laptopRoosterCache_v2','laptopRooster_p4_apr2025'].forEach(k => {
   try { localStorage.removeItem(k); } catch(e) {}
@@ -1041,20 +1091,26 @@ async function loadFromBin() {
     showSyncStatus('⟳ Laden…');
   }
 
-  // Stap 2: haal verse data op achtergrond
+  // Stap 2: haal verse data op achtergrond (niet als we net hebben opgeslagen)
+  if (justSaved) {
+    showSyncStatus('✓ Lokaal opgeslagen', 'rgba(27,94,32,0.15)');
+    return;
+  }
   try {
     const r = await fetch(JSONBIN_URL + '/latest', {
       headers: { 'X-Master-Key': API_KEY }
     });
     const json = await r.json();
-    db = json.record || {};
-    saveLocalCache();
-    if (cached) {
-      // Alleen opnieuw renderen als data verschilt
-      renderAll();
-    } else {
-      renderMonthNav();
-      renderAll();
+    // Alleen overschrijven als we NIET net hebben opgeslagen
+    if (!justSaved) {
+      db = json.record || {};
+      saveLocalCache();
+      if (cached) {
+        renderAll();
+      } else {
+        renderMonthNav();
+        renderAll();
+      }
     }
     showSyncStatus('✓ Bijgewerkt', 'rgba(27,94,32,0.15)');
   } catch(e) {
@@ -1065,8 +1121,10 @@ async function loadFromBin() {
 }
 
 async function saveToBin() {
-  saveLocalCache(); // direct lokaal opslaan → volgende keer meteen zichtbaar
+  saveLocalCache();
+  justSaved = true;
   showSyncStatus('⟳ Opslaan…');
+  showToast('⟳ Opslaan…', 'saving', 0);
   try {
     await fetch(JSONBIN_URL, {
       method: 'PUT',
@@ -1077,11 +1135,14 @@ async function saveToBin() {
       body: JSON.stringify(db)
     });
     showSyncStatus('✓ Opgeslagen', 'rgba(27,94,32,0.15)');
+    showToast('✓ Opgeslagen!', 'success', 2000);
   } catch(e) {
     console.warn('Opslaan mislukt.', e);
     showSyncStatus('⚠ Opslaan mislukt', 'rgba(183,28,28,0.12)');
-    alert('Opslaan mislukt. Controleer je internetverbinding.');
+    showToast('⚠ Opslaan mislukt!', 'error', 4000);
   }
+  // Na 10 seconden mag loadFromBin weer vers laden
+  setTimeout(() => { justSaved = false; }, 10000);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1693,7 +1754,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v7.3';
+const CURRENT_VERSION = 'v7.5';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
