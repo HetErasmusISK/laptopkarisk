@@ -716,9 +716,8 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v8.9</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v9.0</span></div>
     <button onclick="syncCacheToGist()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Stuur lokale cache naar Gist">☁️ Cache opslaan</button>
-    <button onclick="setToken()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="GitHub token instellen">🔑 Token</button>
     <button onclick="clearDatabase()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Verwijder alle reserveringen uit de database">🗑 DB wissen</button>
   </div>
 </header>
@@ -841,11 +840,7 @@
 // CONSTANTEN
 // ══════════════════════════════════════════════════════════
 const PASSWORD       = 'ISK2026!';
-const GIST_ID        = '10bb9c1d79f90a847e06018b476632f7';
-// Token wordt dynamisch gelezen bij gebruik
-function getGistToken() { return localStorage.getItem('iskGistToken') || ''; }
-const GIST_FILE      = 'rooster.json';
-const GIST_URL       = `https://api.github.com/gists/${GIST_ID}`;
+
 
 const DAYS_NL        = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'];
 const SHORT_MONTHS   = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
@@ -1103,11 +1098,12 @@ async function loadFromBin() {
 
   // Stap 2: haal verse data op (alleen als cache niet recent is)
   try {
-    // Laden via publieke raw URL - geeft JSON direct terug
-    const rawUrl = `https://gist.githubusercontent.com/HetErasmusISK/10bb9c1d79f90a847e06018b476632f7/raw/rooster.json?t=${Date.now()}`;
-    const r = await fetch(rawUrl);
-    const text = await r.text();
-    db = JSON.parse(text) || {};
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW}&select=data`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    );
+    const rows = await r.json();
+    db = JSON.parse(rows[0]?.data || '{}');
     saveLocalCache();
     renderAll();
     showSyncStatus('✓ Bijgewerkt', 'rgba(27,94,32,0.15)');
@@ -1119,34 +1115,27 @@ async function loadFromBin() {
 }
 
 async function saveToBin() {
-  // Vraag token als die nog niet is opgeslagen
-  if (!localStorage.getItem('iskGistToken')) {
-    const token = prompt('Voer de GitHub token in om op te slaan (eenmalig):');
-    if (!token || !token.trim()) {
-      showToast('⚠ Geen token – niet opgeslagen', 'error', 4000);
-      justSaved = false;
-      return;
-    }
-    localStorage.setItem('iskGistToken', token.trim());
-  }
   saveLocalCache();
   justSaved = true;
   showSyncStatus('⟳ Opslaan…');
   showToast('⟳ Opslaan…', 'saving', 0);
   try {
-    const res = await fetch(GIST_URL, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'token ' + getGistToken()
-      },
-      body: JSON.stringify({
-        files: { [GIST_FILE]: { content: JSON.stringify(db) } }
-      })
-    });
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ data: JSON.stringify(db) })
+      }
+    );
     if (!res.ok) {
       const errText = await res.text();
-      console.error('GitHub fout:', res.status, errText);
+      console.error('Supabase fout:', res.status, errText);
       throw new Error('HTTP ' + res.status + ': ' + errText.substring(0,100));
     }
     localStorage.setItem('iskSavedAt', Date.now().toString());
@@ -1752,19 +1741,6 @@ document.getElementById('deleteModalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('deleteModalOverlay')) closeDeleteModal();
 });
 
-function setToken() {
-  const huidig = localStorage.getItem('iskGistToken') ? '(al ingesteld)' : '(nog niet ingesteld)';
-  const token = prompt(`GitHub token invoeren ${huidig}:\n(laat leeg om te wissen)`);
-  if (token === null) return; // geannuleerd
-  if (token.trim() === '') {
-    localStorage.removeItem('iskGistToken');
-    alert('Token verwijderd.');
-  } else {
-    localStorage.setItem('iskGistToken', token.trim());
-    alert('Token opgeslagen!');
-  }
-}
-
 async function syncCacheToGist() {
   const cached = loadLocalCache();
   if (!cached || Object.keys(cached).length === 0) {
@@ -1793,7 +1769,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v8.9';
+const CURRENT_VERSION = 'v9.0';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
