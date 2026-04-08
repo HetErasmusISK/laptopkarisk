@@ -716,7 +716,7 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v9.0</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v9.1</span></div>
     <button onclick="syncCacheToGist()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Stuur lokale cache naar Gist">☁️ Cache opslaan</button>
     <button onclick="clearDatabase()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Verwijder alle reserveringen uit de database">🗑 DB wissen</button>
   </div>
@@ -851,11 +851,11 @@ const SHORT_MONTHS   = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','o
 const FULL_MONTHS    = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
 
 const HOURS = [
-  { label: '1e uur', time: '08:30–09:20', bg: '#e8f4fd', labelBg: '#bbdefb' },
-  { label: '2e uur', time: '09:20–10:10', bg: '#f3e8fd', labelBg: '#e1bee7' },
-  { label: '3e uur', time: '10:30–11:20', bg: '#e8fdf4', labelBg: '#b2dfdb' },
-  { label: '4e uur', time: '11:20–12:10', bg: '#fdf6e8', labelBg: '#ffe0b2' },
-  { label: '5e uur', time: '13:00–13:50', bg: '#fde8ee', labelBg: '#ffcdd2' },
+  { label: '1e uur', time: '08:30–09:10', bg: '#e8f4fd', labelBg: '#bbdefb' },
+  { label: '2e uur', time: '09:10–10:30', bg: '#f3e8fd', labelBg: '#e1bee7' },
+  { label: '3e uur', time: '10:50–12:10', bg: '#e8fdf4', labelBg: '#b2dfdb' },
+  { label: '4e uur', time: '12:40–14:00', bg: '#fdf6e8', labelBg: '#ffe0b2' },
+  { label: '5e uur', time: '14:20–15:40', bg: '#fde8ee', labelBg: '#ffcdd2' },
 ];
 
 const KARREN = [
@@ -1773,7 +1773,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v9.0';
+const CURRENT_VERSION = 'v9.1';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
