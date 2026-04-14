@@ -40,6 +40,42 @@
   }
 
 
+
+  /* ── SETTINGS MODAL ── */
+  .settings-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 500;
+    display: none; align-items: center; justify-content: center;
+  }
+  .settings-overlay.open { display: flex; }
+  .settings-box {
+    background: white; border-radius: 16px;
+    padding: 28px 24px; width: 340px; max-width: 95vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .settings-title {
+    font-size: 1.1rem; font-weight: 800; color: var(--text);
+    margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+  }
+  .settings-btn {
+    width: 100%; padding: 12px 16px; margin-bottom: 10px;
+    border-radius: 10px; border: 1.5px solid var(--border);
+    background: var(--surface2); font-family: inherit;
+    font-size: 0.88rem; font-weight: 700; color: var(--text);
+    cursor: pointer; text-align: left; display: flex; align-items: center; gap: 10px;
+    transition: background 0.12s;
+  }
+  .settings-btn:hover { background: var(--accent-light); }
+  .settings-btn.danger { border-color: #ffcdd2; color: #b71c1c; }
+  .settings-btn.danger:hover { background: #ffebee; }
+  .settings-close {
+    width: 100%; padding: 10px; margin-top: 4px;
+    border-radius: 10px; border: 1.5px solid var(--border);
+    background: none; font-family: inherit; font-size: 0.85rem;
+    color: var(--muted); cursor: pointer; font-weight: 600;
+  }
+
   /* ── TOAST POPUP ── */
   .toast {
     position: fixed;
@@ -716,9 +752,8 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v9.2</span></div>
-    <button onclick="syncCacheToGist()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Stuur lokale cache naar Gist">☁️ Cache opslaan</button>
-    <button onclick="clearDatabase()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:0.75rem;cursor:pointer;font-weight:600;" title="Verwijder alle reserveringen uit de database">🗑 DB wissen</button>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v9.3</span></div>
+    <button onclick="openSettings()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 12px;border-radius:7px;font-family:inherit;font-size:0.85rem;cursor:pointer;font-weight:600;" title="Instellingen">⚙️</button>
   </div>
 </header>
 
@@ -1752,16 +1787,71 @@ document.getElementById('deleteModalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('deleteModalOverlay')) closeDeleteModal();
 });
 
-async function syncCacheToGist() {
+
+
+function openSettings() {
+  const pw = prompt('Voer het beheerderwachtwoord in:');
+  if (pw === null) return;
+  if (pw !== '7772SNR54!') { alert('Onjuist wachtwoord.'); return; }
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('open');
+}
+
+async function settingsForceReload() {
+  closeSettings();
+  showToast('🔄 Herladen vanuit database…', 'saving', 0);
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW}&select=data`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    );
+    const rows = await r.json();
+    db = JSON.parse(rows[0]?.data || '{}');
+    saveLocalCache();
+    renderMonthNav();
+    renderAll();
+    showToast('✓ Herladen gelukt!', 'success', 2500);
+  } catch(e) {
+    showToast('⚠ Herladen mislukt', 'error', 4000);
+  }
+}
+
+async function settingsImport() {
+  closeSettings();
   const cached = loadLocalCache();
   if (!cached || Object.keys(cached).length === 0) {
     alert('Geen data in lokale cache gevonden.');
     return;
   }
   db = cached;
-  showToast('☁️ Cache uploaden…', 'saving', 0);
+  showToast('📥 Cache uploaden…', 'saving', 0);
   await saveToBin();
 }
+
+function settingsStats() {
+  closeSettings();
+  const keys = Object.keys(db).filter(k => db[k] && db[k].length > 0);
+  const totaal = keys.reduce((s, k) => s + db[k].length, 0);
+  const docenten = [...new Set(keys.flatMap(k => db[k].map(r => r.name)))].sort();
+  alert(`📊 Statistieken\n\nAantal sloten met reservering: ${keys.length}\nTotaal reserveringen: ${totaal}\nDocenten: ${docenten.join(', ')}`);
+}
+
+async function settingsClear() {
+  closeSettings();
+  if (!confirm('Weet je zeker dat je ALLE reserveringen wilt verwijderen?')) return;
+  db = {};
+  saveLocalCache();
+  await saveToBin();
+  renderAll();
+  showToast('🗑 Database geleegd.', 'success', 2500);
+}
+
+document.getElementById('settingsOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('settingsOverlay')) closeSettings();
+});
 
 async function clearDatabase() {
   const pw = prompt('Voer het beheerderwachtwoord in:');
@@ -1780,7 +1870,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v9.2';
+const CURRENT_VERSION = 'v9.3';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
@@ -1812,6 +1902,19 @@ if (localStorage.getItem(AUTH_KEY) === 'true') {
         Annuleren
       </button>
     </div>
+  </div>
+</div>
+
+
+<!-- SETTINGS MODAL -->
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-box">
+    <div class="settings-title">⚙️ Beheerinstellingen</div>
+    <button class="settings-btn" onclick="settingsForceReload()">🔄 <span>Forceer herladen vanuit database</span></button>
+    <button class="settings-btn" onclick="settingsImport()">📥 <span>Data importeren (cache → database)</span></button>
+    <button class="settings-btn" onclick="settingsStats()">📊 <span>Statistieken</span></button>
+    <button class="settings-btn danger" onclick="settingsClear()">🗑 <span>Alle reserveringen wissen</span></button>
+    <button class="settings-close" onclick="closeSettings()">Annuleren</button>
   </div>
 </div>
 
