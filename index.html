@@ -752,7 +752,7 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v9.4</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v9.5</span></div>
     <button onclick="openSettings()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 12px;border-radius:7px;font-family:inherit;font-size:0.85rem;cursor:pointer;font-weight:600;" title="Instellingen">⚙️</button>
   </div>
 </header>
@@ -875,10 +875,7 @@
 // CONSTANTEN
 // ══════════════════════════════════════════════════════════
 const PASSWORD       = 'ISK2026!';
-const SUPABASE_URL   = 'https://wloyopcooskxvrqmrojv.supabase.co';
-const SUPABASE_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indsb3lvcGNvb3NreHZycW1yb2p2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NTg1MTcsImV4cCI6MjA5MTEzNDUxN30.3MH_WcCAIXxUjXvk_9Y-QO4l8itLEmwDIv7nXdxR354';
-const SUPABASE_TABLE = 'rooster';
-const SUPABASE_ROW   = 1;
+const FIREBASE_URL = 'https://isk-laptopkar-default-rtdb.europe-west1.firebasedatabase.app';
 
 
 const DAYS_NL        = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'];
@@ -1128,15 +1125,12 @@ async function loadFromBin() {
     showSyncStatus('⟳ Laden…');
   }
 
-  // Stap 2: haal ALTIJD verse data op uit Supabase — cache is nooit leidend
+  // Stap 2: haal ALTIJD verse data op uit Firebase — cache is nooit leidend
   try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW}&select=data`,
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-    );
+    const r = await fetch(`${FIREBASE_URL}/rooster.json`);
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    const rows = await r.json();
-    db = JSON.parse(rows[0]?.data || '{}');
+    const data = await r.json();
+    db = data || {};
     saveLocalCache();
     renderMonthNav();
     renderAll();
@@ -1154,22 +1148,14 @@ async function saveToBin() {
   showSyncStatus('⟳ Opslaan…');
   showToast('⟳ Opslaan…', 'saving', 0);
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({ data: JSON.stringify(db) })
-      }
-    );
+    const res = await fetch(`${FIREBASE_URL}/rooster.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(db)
+    });
     if (!res.ok) {
       const errText = await res.text();
-      console.error('Supabase fout:', res.status, errText);
+      console.error('Firebase fout:', res.status, errText);
       throw new Error('HTTP ' + res.status + ': ' + errText.substring(0,100));
     }
     localStorage.setItem('iskSavedAt', Date.now().toString());
@@ -1661,18 +1647,40 @@ async function confirmReservation() {
   const { wi, di, hi, editIdx } = pending;
 
   if (editIdx !== null) {
-    // WIJZIGEN – alleen deze ene reservering
+    // WIJZIGEN
     const k   = cellKey(wi, di, hi);
     const res = db[k][editIdx];
-    // Bewaar originele naam als er nog geen eerdere wijziging was
     const originalName = res.originalName || res.name;
-    db[k][editIdx] = {
+    const createdAt    = res.createdAt;
+    const updatedRes   = {
       ...res,
       lokaal, vak, laptops,
       editedBy:     name,
       originalName: originalName,
       editedAt:     new Date().toISOString()
     };
+    db[k][editIdx] = updatedRes;
+
+    // Vraag of alle herhalingen ook gewijzigd moeten worden
+    const herhalingen = [];
+    for (let scanWi = 0; scanWi < ALL_WEEKS.length; scanWi++) {
+      if (scanWi === wi) continue; // huidige week al gedaan
+      const scanKey = cellKey(scanWi, di, hi);
+      if (!db[scanKey]) continue;
+      const idx = db[scanKey].findIndex(r =>
+        r.createdAt === createdAt && r.kar === res.kar
+      );
+      if (idx >= 0) herhalingen.push({ scanKey, idx });
+    }
+
+    if (herhalingen.length > 0) {
+      const alleWijzigen = confirm(`Deze reservering herhaalt zich in ${herhalingen.length} andere week(en).\nWil je alle herhalingen ook wijzigen?`);
+      if (alleWijzigen) {
+        herhalingen.forEach(({ scanKey, idx: i }) => {
+          db[scanKey][i] = { ...db[scanKey][i], lokaal, vak, laptops, editedBy: name, originalName, editedAt: updatedRes.editedAt };
+        });
+      }
+    }
   } else {
     // NIEUW – herhaal voor meerdere weken, vakantieweken overslaan (tellen niet mee)
     let schoolWeeksPlanned = 0;
@@ -1792,12 +1800,9 @@ async function settingsForceReload() {
   closeSettings();
   showToast('🔄 Herladen vanuit database…', 'saving', 0);
   try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW}&select=data`,
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-    );
-    const rows = await r.json();
-    db = JSON.parse(rows[0]?.data || '{}');
+    const r = await fetch(`${FIREBASE_URL}/rooster.json`);
+    const data = await r.json();
+    db = data || {};
     saveLocalCache();
     renderMonthNav();
     renderAll();
@@ -1858,7 +1863,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v9.4';
+const CURRENT_VERSION = 'v9.5';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
