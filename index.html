@@ -1351,6 +1351,8 @@ function renderKarBar() {
 // RENDER
 // ══════════════════════════════════════════════════════════
 function renderAll() {
+  const keys = Object.keys(db).filter(k => db[k] && db[k].length > 0);
+  console.log('[renderAll] db keys met data:', keys.length, 'voorbeeld:', keys[0]);
   updateWeekPills();
   renderKarBar();
   renderTable();
