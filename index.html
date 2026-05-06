@@ -752,7 +752,7 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v9.7</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v9.8</span></div>
     <button onclick="openSettings()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 12px;border-radius:7px;font-family:inherit;font-size:0.85rem;cursor:pointer;font-weight:600;" title="Instellingen">⚙️</button>
   </div>
 </header>
@@ -1130,7 +1130,8 @@ async function loadFromBin() {
     const r = await fetch(`${FIREBASE_URL}/.json`);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
-    db = data || {};
+    console.log('[Firebase] data type:', typeof data, 'keys:', data ? Object.keys(data).length : 0);
+    db = (data && typeof data === 'object') ? data : {};
     saveLocalCache();
     renderMonthNav();
     renderAll();
@@ -1863,7 +1864,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v9.7';
+const CURRENT_VERSION = 'v9.8';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
