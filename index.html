@@ -1261,13 +1261,8 @@ function renderMonthNav() {
   });
 
   // Sorteer: actieve maand eerst, daarna rest chronologisch
-  const allNavKeys   = Array.from(groups.keys()).sort();
-  const activeFri    = ALL_WEEKS[currentWeekIdx] ? addDays(ALL_WEEKS[currentWeekIdx].monday, 4) : null;
-  const activeNavKey = activeFri ? `${activeFri.getFullYear()}-${String(activeFri.getMonth()).padStart(2,'0')}` : null;
-  const activeNavPos = activeNavKey ? allNavKeys.indexOf(activeNavKey) : -1;
-  const orderedNavKeys = activeNavPos >= 0
-    ? [...allNavKeys.slice(activeNavPos), ...allNavKeys.slice(0, activeNavPos)]
-    : allNavKeys;
+  // Altijd chronologisch sorteren
+  const orderedNavKeys = Array.from(groups.keys()).sort();
 
   orderedNavKeys.forEach(key => {
     const g   = groups.get(key);
