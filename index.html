@@ -1127,7 +1127,7 @@ async function loadFromBin() {
 
   // Stap 2: haal ALTIJD verse data op uit Firebase — cache is nooit leidend
   try {
-    const r = await fetch(`${FIREBASE_URL}/rooster.json`);
+    const r = await fetch(`${FIREBASE_URL}/.json`);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     db = data || {};
@@ -1800,7 +1800,7 @@ async function settingsForceReload() {
   closeSettings();
   showToast('🔄 Herladen vanuit database…', 'saving', 0);
   try {
-    const r = await fetch(`${FIREBASE_URL}/rooster.json`);
+    const r = await fetch(`${FIREBASE_URL}/.json`);
     const data = await r.json();
     db = data || {};
     saveLocalCache();
