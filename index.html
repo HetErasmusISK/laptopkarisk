@@ -752,7 +752,7 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v10.3</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v10.5</span></div>
     <button onclick="openSettings()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 12px;border-radius:7px;font-family:inherit;font-size:0.85rem;cursor:pointer;font-weight:600;" title="Instellingen">⚙️</button>
   </div>
 </header>
@@ -1198,10 +1198,40 @@ function getAvail(wi, di, hi, karId) {
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
+// Auto-refresh: elke 30 seconden Firebase checken op nieuwe data
+let autoRefreshTimer = null;
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(async () => {
+    // Niet verversen als we net zelf hebben opgeslagen
+    const savedAt = parseInt(localStorage.getItem('iskSavedAt') || '0');
+    if ((Date.now() - savedAt) < 15000) return;
+    try {
+      const r = await fetch(`${FIREBASE_URL}/.json`);
+      if (!r.ok) return;
+      const data = await r.json();
+      const newDb = (data && typeof data === 'object') ? data : {};
+      // Alleen opnieuw renderen als de data veranderd is
+      if (JSON.stringify(newDb) !== JSON.stringify(db)) {
+        db = newDb;
+        saveLocalCache();
+        renderAll();
+        showToast('🔄 Rooster bijgewerkt', 'saving', 1500);
+      }
+    } catch(e) { /* stil falen */ }
+  }, 5000); // elke 5 seconden
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+}
+
 async function initApp() {
   buildWeeks();
   await loadFromBin();
   shiftVacationReservations();
+  startAutoRefresh();
 }
 
 function shiftVacationReservations() {
@@ -1499,6 +1529,7 @@ function onNameInput(el) {
 }
 
 function openModal(di, hi, avail) {
+  stopAutoRefresh();
   // Blokkeer vakantieweken en vrije dagen
   const date = addDays(ALL_WEEKS[currentWeekIdx].monday, di);
   if (isVacationWeek(currentWeekIdx) || isFreeDay(date)) return;
@@ -1532,6 +1563,7 @@ function openModal(di, hi, avail) {
 // MODAL – WIJZIGEN
 // ══════════════════════════════════════════════════════════
 function openEditModal(wi, di, hi, ri) {
+  stopAutoRefresh();
   const date = addDays(ALL_WEEKS[wi].monday, di);
   if (isVacationWeek(wi) || isFreeDay(date)) return;
   const res  = getRes(wi, di, hi)[ri];
@@ -1575,6 +1607,7 @@ function openEditModal(wi, di, hi, ri) {
 }
 
 function closeModal() {
+  startAutoRefresh();
   document.getElementById('modalOverlay').classList.remove('open');
   pending = null;
 }
@@ -1862,7 +1895,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v10.3';
+const CURRENT_VERSION = 'v10.5';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
