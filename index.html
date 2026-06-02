@@ -752,7 +752,7 @@
     <div id="syncStatus" style="display:none;font-size:0.78rem;padding:4px 12px;border-radius:8px;margin-top:5px;font-weight:700;color:#1a4a7a;animation:fadeIn 0.2s ease;"></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v10.5</span></div>
+    <div class="periode-label">Periode 4 · 2025–2026 <span style="font-size:0.65rem;opacity:0.7">v10.6</span></div>
     <button onclick="openSettings()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 12px;border-radius:7px;font-family:inherit;font-size:0.85rem;cursor:pointer;font-weight:600;" title="Instellingen">⚙️</button>
   </div>
 </header>
@@ -1617,6 +1617,26 @@ function onVakChange() {
   document.getElementById('priorityNote').classList.toggle('show', PRIORITY_VAKKEN.includes(vak));
 }
 
+// Vakken die maar 1 week mogen reserveren
+const EENWEEK_VAKKEN = ['Nederlands', 'Rekenen/Wiskunde', 'JIJ-toets', 'Zorg en Welzijn'];
+
+function onVakChange() {
+  const vak = document.getElementById('fVak').value;
+  const wekenField = document.getElementById('wekenField');
+  const fWeken = document.getElementById('fWeken');
+  if (EENWEEK_VAKKEN.includes(vak)) {
+    fWeken.value = '1';
+    wekenField.style.opacity = '0.4';
+    wekenField.style.pointerEvents = 'none';
+    wekenField.title = `${vak} kan maar 1 week worden gereserveerd`;
+  } else {
+    wekenField.style.opacity = '1';
+    wekenField.style.pointerEvents = '';
+    wekenField.title = '';
+  }
+  updateRecurringNote();
+}
+
 function updateRecurringNote() {
   const weeks = parseInt(document.getElementById('fWeken').value);
   const note  = document.getElementById('recurringNote');
@@ -1895,7 +1915,7 @@ async function clearDatabase() {
 
 // Automatisch inloggen als eerder al ingelogd (staat hier zodat alle functies al geladen zijn)
 // Reset auth voor nieuwe versie v4.0
-const CURRENT_VERSION = 'v10.5';
+const CURRENT_VERSION = 'v10.6';
 if (localStorage.getItem('laptopAppVersion') !== CURRENT_VERSION) {
   localStorage.removeItem(AUTH_KEY);
   localStorage.setItem('laptopAppVersion', CURRENT_VERSION);
